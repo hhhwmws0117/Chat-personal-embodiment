@@ -6,7 +6,7 @@ import openai
 import tiktoken
 import torch
 from scipy.spatial.distance import cosine
-from langchain.chat_models import ChatOpenAI
+from baichuanAgent import chatAgent
 import gradio as gr
 import random
 import time
@@ -214,9 +214,13 @@ class ChatGPT:
     def organize_message_langchain(self, story, history_chat, history_response, new_query):
         # messages =  [{'role':'system', 'content':SYSTEM_PROMPT}, {'role':'user', 'content':story}]
 
+        # messages = [
+        #     SystemMessage(content=self.system_prompt),
+        #     HumanMessage(content=story)
+        # ]
         messages = [
-            SystemMessage(content=self.system_prompt),
-            HumanMessage(content=story)
+            self.system_prompt,
+            story
         ]
 
         n = len(history_chat)
@@ -228,12 +232,14 @@ class ChatGPT:
             n = 0
 
         for i in range(n):
-            messages.append(HumanMessage(content=history_chat[i]))
-            messages.append(AIMessage(content=history_response[i]))
-
+            # messages.append(HumanMessage(content=history_chat[i]))
+            # messages.append(AIMessage(content=history_response[i]))
+            # TODO 让Messages直接保存成api请求头的格式。这里仅是简单的实现
+            messages.append(history_chat[i])
+            messages.append(history_response[i])
         # messages.append( {'role':'user', 'content':new_query })
-        messages.append(HumanMessage(content=new_query))
-        print(messages)
+        # messages.append(HumanMessage(content=new_query))
+        messages.append(new_query)
         return messages
 
     def get_response(self, user_message, chat_history_tuple):
@@ -262,11 +268,17 @@ class ChatGPT:
         messages = self.organize_message_langchain(story, history_chat, history_response, new_query)
         # print("this is os.environment:  ", os.environ["OPENAI_API_KEY"])
         # print("OPENAI_API_KEY" in os.environ.keys())
-        if not "OPENAI_API_KEY" in os.environ.keys():
-            chat = ChatOpenAI(temperature=0, openai_api_key=self.api_key, model_kwargs={"stop": ["\n", "」"]})
-        else:
-            chat = ChatOpenAI(temperature=0, model_kwargs={"stop": ["\n", "」"]})
-        return_msg = chat(messages)
-        response = return_msg.content + "」"
-
+        # if not "OPENAI_API_KEY" in os.environ.keys():
+        #     chat = ChatOpenAI(temperature=0, openai_api_key=self.api_key, model_kwargs={"stop": ["\n", "」"]})
+        # else:
+        #     chat = ChatOpenAI(temperature=0, model_kwargs={"stop": ["\n", "」"]})
+        # return_msg = chat(messages)
+        messages = "\n".join(messages)
+        responses = chatAgent(messages)
+        return_msg = ""
+        while not responses.empty():
+            return_msg += responses.get() # TODO 做成流式输出
+        # response = return_msg.content + "」"
+        response = return_msg
+        print(response)
         return response

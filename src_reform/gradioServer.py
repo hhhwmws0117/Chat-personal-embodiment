@@ -74,7 +74,6 @@ def create_gradio(chat_system):
             """
         )
         with gr.Tab("Chat-Haruhi") as chat:
-            api_key = gr.Textbox(label="输入key", value="sr-xxxxxxxx")
             character = gr.Radio(character_list, label="Character", value='凉宫春日')
             image_input = gr.Textbox(visible=False)
             japanese_input = gr.Textbox(visible=False)
