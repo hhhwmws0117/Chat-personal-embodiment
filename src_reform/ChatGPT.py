@@ -219,8 +219,7 @@ class ChatGPT:
         #     HumanMessage(content=story)
         # ]
         messages = [
-            self.system_prompt,
-            story
+            {'role': 'user', 'content': self.system_prompt + '\n' + story}
         ]
 
         n = len(history_chat)
@@ -235,11 +234,11 @@ class ChatGPT:
             # messages.append(HumanMessage(content=history_chat[i]))
             # messages.append(AIMessage(content=history_response[i]))
             # TODO 让Messages直接保存成api请求头的格式。这里仅是简单的实现
-            messages.append(history_chat[i])
-            messages.append(history_response[i])
+            messages.append({'role': 'user', 'content': history_chat[i]})
+            messages.append({'role': 'assistant', 'content': history_response[i]})
         # messages.append( {'role':'user', 'content':new_query })
         # messages.append(HumanMessage(content=new_query))
-        messages.append(new_query)
+        messages.append({'role': 'user', 'content': new_query})
         return messages
 
     def get_response(self, user_message, chat_history_tuple):
@@ -273,7 +272,6 @@ class ChatGPT:
         # else:
         #     chat = ChatOpenAI(temperature=0, model_kwargs={"stop": ["\n", "」"]})
         # return_msg = chat(messages)
-        messages = "\n".join(messages)
         responses = chatAgent(messages)
         return_msg = ""
         while not responses.empty():
