@@ -64,16 +64,18 @@ def create_gradio(chat_system):
         return {gen: gr.update(visible=False),
                 chat: gr.update(visible=True)}
 
+    def dialogue(): # TODO 双人对话，类似函数respond()的功能 
+        pass
+    def switchOneCharacter(): # TODO 双人对话中切换一个角色。或许和SwitchCharacter()非常类似。
+        pass
     with gr.Blocks() as demo:
         gr.Markdown(
             """
-            ## Chat凉宫春日 ChatHaruhi
-            - 项目地址 [https://github.com/LC1332/Chat-Haruhi-Suzumiya](https://github.com/LC1332/Chat-Haruhi-Suzumiya)
-            - 骆驼项目地址 [https://github.com/LC1332/Luotuo-Chinese-LLM](https://github.com/LC1332/Luotuo-Chinese-LLM) 
-            - 此版本为图文版本，完整功能（+语音）的demo见项目 角色名建议输入 阿虚 或者影视剧中有的人物。或者也可以是新学生或者老师。
+            ## Chat-personal-embodiment 个人化身
+            - 项目地址 [https://github.com/hhhwmws0117/Chat-personal-embodiment](https://github.com/hhhwmws0117/Chat-personal-embodiment)
             """
         )
-        with gr.Tab("Chat-Haruhi") as chat:
+        with gr.Tab("Chat-Embodiment") as chat:
             character = gr.Radio(character_list, label="Character", value='凉宫春日')
             image_input = gr.Textbox(visible=False)
             japanese_input = gr.Textbox(visible=False)
@@ -155,6 +157,19 @@ def create_gradio(chat_system):
                              outputs=[custom_msg, chatbot, image_input])
             # custom_audio_btn.click(fn=update_audio, inputs=[audio, japanese_output], outputs=audio)
             generate_btn.click(generate, role_name, [gen, chat])
+        with gr.Tab("Dialogue of Two Embodiments"):
+            with gr.Row():
+                character1 = gr.Radio(character_list, label="CharacterA", value='凉宫春日')
+                character2 = gr.Radio(character_list, label="CharacterB", value='李云龙')
+            with gr.Row():
+                chatbot = gr.Chatbot()
+            with gr.Row():
+                begin1 = gr.Button(str(character1.value) + "先说")
+                begin2 = gr.Button(str(character2.value) + "先说")
+            character1.change(fn=switchOneCharacter) # TODO 
+            character2.change(fn=switchOneCharacter) # TODO
+            begin1.click(fn=dialogue) # TODO
+            begin2.click(fn=dialogue) # TODO
     demo.launch(debug=True, share=True)
 
 

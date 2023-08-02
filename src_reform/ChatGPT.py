@@ -112,18 +112,6 @@ class ChatGPT:
         else:
             print("Image doesn't exist")
 
-    # 一个封装 OpenAI 接口的函数，参数为 Prompt，返回对应结果
-    def get_completion_from_messages(self, messages, model="gpt-3.5-turbo", temperature=0):
-        # openai.api_key = self.api_key
-        # print(openai.api_key)
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,  # 控制模型输出的随机程度
-        )
-        #  print(str(response.choices[0].message))
-        return response.choices[0].message["content"]
-
     def get_cosine_similarity(self, texts, get_image=False, get_texts=False):
         """
             计算文本列表的相似度避免重复计算query_similarity
