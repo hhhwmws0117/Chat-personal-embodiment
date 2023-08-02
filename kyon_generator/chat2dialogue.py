@@ -34,7 +34,7 @@ def load_chat(filename):
 
 
 def save_dialogue(filename, dialogue):
-    with open(filename, 'w', encoding='utf-8') as f:
+    with open(filename, 'w+', encoding='utf-8') as f:
         for message in dialogue:
             f.write(json.dumps(message, ensure_ascii=False) + '\n')
 
@@ -42,21 +42,19 @@ def save_dialogue(filename, dialogue):
 def parse_args():
     parser = argparse.ArgumentParser(description='Chat to Dialogue Conversion')
     parser.add_argument('-input_chat', nargs="+", type=str, required=True, help='input chat file (jsonl)')
-    parser.add_argument('-output_dialogue', nargs="+", type=str, default=None, help='output dialogue file (jsonl)')
-    parser.add_argument('-config', type=str, default='config.ini', required=True, help='configuration file (ini)')
     parser.add_argument('-config_role_name', nargs="+", type=str, required=True, help='role name in config.ini')
     parser.add_argument('-text_role_name', nargs="+", type=str, required=True, help='role name in texts folder')
     return parser.parse_args()
 
 
-def main(input_chat, output_dialogue, config_file, role_name, other_names):
+def main(input_chat, role_name, other_names):
     # Load chat data
     chat_data = load_chat(input_chat)
 
     # Load config
     configuration = {}
     config = configparser.ConfigParser()
-    config.read(config_file, encoding='utf-8')
+    config.read("../src_reform/config.ini", encoding='utf-8')
     sections = config.sections()
     print(config.items)
     items = config.items(role_name)
@@ -82,24 +80,18 @@ def main(input_chat, output_dialogue, config_file, role_name, other_names):
         response = chatgpt.get_response(user_message, [])
 
         # Append message to dialogue
-        dialogue.append({"dialogue": [{"role": role, "text": text}, {"role": role_name, "text": response}]})
+        dialogue.append({"dialogue": [{"role": role, "text": text}, {"role": role_name, "text": response}], "source": "synthesized"})
 
     # Save dialogue to output file
-    if output_dialogue is None:
-        output_dialogue = f'{role_name}-{input_chat}_to_dialogue.jsonl'
+    output_dialogue = f'{input_chat[:-4]}_to_dialogue.jsonl'
     save_dialogue(output_dialogue, dialogue)
 
 
 if __name__ == '__main__':
     args = parse_args()
     input_chat_lis = args.input_chat
-    output_dialogue_lis = args.output_dialogue
-    config = args.config
     config_role_name_lis = args.config_role_name
     text_role_name_lis = args.text_role_name
     if len(input_chat_lis) == len(config_role_name_lis) == len(text_role_name_lis):
-        for input_chat, output_dialogue, config_role_name, text_role_name in zip(input_chat_lis,
-                                                                                 output_dialogue_lis,
-                                                                                 config_role_name_lis,
-                                                                                 text_role_name_lis):
-            main(input_chat, output_dialogue, config, config_role_name, text_role_name)
+        for input_chat, config_role_name, text_role_name in zip(input_chat_lis, config_role_name_lis, text_role_name_lis):
+            main(input_chat, config_role_name, text_role_name)
