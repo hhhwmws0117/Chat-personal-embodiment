@@ -8,13 +8,13 @@ import json
 
 # Open a configuration file
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf-8')
 print(config['凉宫春日']['image_embed_jsonl_path'])
 characters = ['凉宫春日','李云龙','神里绫华']
 #characters = ['凉宫春日','李云龙','于谦','李鲁鲁','王多鱼','汤师爷','韦小宝']
 
 questions = []
-with open('16.txt','r') as f:
+with open('16.txt','r', encoding='utf-8') as f:
     lines = f.readlines()
     for line in lines:
         if line != '\n':

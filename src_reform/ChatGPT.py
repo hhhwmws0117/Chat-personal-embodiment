@@ -272,11 +272,12 @@ class ChatGPT:
         # else:
         #     chat = ChatOpenAI(temperature=0, model_kwargs={"stop": ["\n", "」"]})
         # return_msg = chat(messages)
+        print("\nQuery: \n", messages, "\n")
         responses = chatAgent(messages)
         return_msg = ""
         while not responses.empty():
             return_msg += responses.get() # TODO 做成流式输出
         # response = return_msg.content + "」"
         response = return_msg
-        print(response)
+        print("Response:\n", response)
         return response

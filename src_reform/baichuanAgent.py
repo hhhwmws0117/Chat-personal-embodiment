@@ -79,7 +79,6 @@ def run(ws, *args):
 
 # 收到websocket消息的处理
 def on_message(ws, message):
-    print(message)
     data = json.loads(message)
     code = data['header']['code']
     if code != 0:
