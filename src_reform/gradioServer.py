@@ -73,7 +73,7 @@ def create_gradio(chat_system, chat_system2):
         left_message = chat_system.getResponse("我们结婚吧", (), left_character)
         right_message = chat_system2.getResponse(left_message, (), right_character)
         chat_history.append((left_message, right_message))
-        return "", chat_history
+        yield "", chat_history
 
     def switchOneCharacter(characterName):  # TODO 双人对话中切换一个角色。或许和SwitchCharacter()非常类似。
         if characterName in left_character_list:
