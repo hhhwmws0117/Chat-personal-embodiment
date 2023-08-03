@@ -11,7 +11,7 @@ class ChatSystem:
         self.chatHistory = {}
         self.readConfig()
 
-        self.addCharacter()
+        self.addCharacter("凉宫春日")
         self.getAllCharacters()
 
     def readConfig(self):
