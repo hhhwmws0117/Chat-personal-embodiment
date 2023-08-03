@@ -40,15 +40,34 @@ def create_gradio(chat_system, chat_system2, chat_system3):
         return "", chat_history, bot_message
     
 
-    def dialogue(left_character, right_character, chat_history):  # TODO 双人对话，类似函数respond()的功能
+    def dialogueA(left_character, right_character, chat_history):
         print(left_character)
+        chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
+        input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？' + '」'
+        left_message = right_message = ""
         for i in range(3):
-            input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？'+'」'
-            left_message = chat_system2.getResponse(input_message, (), left_character)
-            right_message = chat_system3.getResponse(left_message, (), right_character)
-            chat_history.append((left_message, right_message))
+            if i == 0 and chat_history == []: # 第一轮
+                right_message = chat_system3.getResponse(input_message, chat_history, right_character)
+                chat_history.append((input_message, right_message))
+            else:
+                left_message = chat_system2.getResponse(right_message, (lambda chat_history: [(b, a) for a, b in chat_history])(chat_history), left_character)
+                right_message = chat_system3.getResponse(left_message, chat_history, right_character)
+                chat_history.append((left_message, right_message))
             yield chat_history
-    
+    def dialogueB(left_character, right_character, chat_history):
+        print(left_character)
+        chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
+        input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？' + '」'
+        left_message = right_message = ""
+        for i in range(3):
+            if i == 0 and chat_history == []: # 第一轮
+                left_message = chat_system2.getResponse(input_message, chat_history, left_character)
+                chat_history.append((input_message, left_message))
+            else:
+                right_message = chat_system3.getResponse(left_message, (lambda chat_history: [(b, a) for a, b in chat_history])(chat_history), right_character)
+                left_message = chat_system2.getResponse(right_message, chat_history, left_character)
+                chat_history.append((right_message, left_message))
+            yield chat_history
 
     def getImage(query, character):
         pass
@@ -194,8 +213,8 @@ def create_gradio(chat_system, chat_system2, chat_system3):
 
             character1.change(fn=switchOneCharacterA, inputs=[character1, chatbot2], outputs=[chatbot2])  # TODO
             character2.change(fn=switchOneCharacterB, inputs=[character2, chatbot2], outputs=[chatbot2])  # TODO
-            begin1.click(fn=dialogue, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
-            begin2.click(fn=dialogue, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
+            begin1.click(fn=dialogueA, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
+            begin2.click(fn=dialogueB, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
             # chatbot.change
             stop.click(fn=stopChat)
     demo.queue().launch(debug=True, share=True)
