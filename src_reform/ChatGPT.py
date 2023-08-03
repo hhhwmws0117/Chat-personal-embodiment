@@ -200,7 +200,7 @@ class ChatGPT:
 
         return history_chat[-keep_k:], history_response[-keep_k:]
 
-    def organize_message_langchain(self, story, history_chat, history_response, new_query):
+    def organize_message_langchain(self, story, history_chat, history_response, new_query, first_person=False):
         # messages =  [{'role':'system', 'content':SYSTEM_PROMPT}, {'role':'user', 'content':story}]
 
         # messages = [
@@ -234,14 +234,19 @@ class ChatGPT:
             # messages.append(HumanMessage(content=history_chat[i]))
             # messages.append(AIMessage(content=history_response[i]))
             # TODO 让Messages直接保存成api请求头的格式。这里仅是简单的实现
-            messages.append({'role': 'user', 'content': history_chat[i]})
-            messages.append({'role': 'assistant', 'content': history_response[i]})
+            if first_person:
+                messages.append({'role': 'assistant', 'content': history_chat[i]})
+                messages.append({'role': 'user', 'content': history_response[i]})
+            else:
+                messages.append({'role': 'user', 'content': history_chat[i]})
+                messages.append({'role': 'assistant', 'content': history_response[i]})
         # messages.append( {'role':'user', 'content':new_query })
         # messages.append(HumanMessage(content=new_query))
-        messages.append({'role': 'user', 'content': new_query})
+        if not first_person:
+            messages.append({'role': 'user', 'content': new_query})
         return messages
 
-    def get_response(self, user_message, chat_history_tuple):
+    def get_response(self, user_message, chat_history_tuple, first_person=False):
 
         history_chat = []
         history_response = []
@@ -264,7 +269,7 @@ class ChatGPT:
         ## TODO: visualize seletected sample later
         print('当前辅助sample:', selected_sample)
         
-        messages = self.organize_message_langchain(story, history_chat, history_response, new_query)
+        messages = self.organize_message_langchain(story, history_chat, history_response, new_query, first_person=first_person)
         # print("this is os.environment:  ", os.environ["OPENAI_API_KEY"])
         # print("OPENAI_API_KEY" in os.environ.keys())
         # if not "OPENAI_API_KEY" in os.environ.keys():

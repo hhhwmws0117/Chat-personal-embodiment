@@ -50,7 +50,7 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 right_message = chat_system3.getResponse(input_message, chat_history, right_character)
                 chat_history.append((input_message, right_message))
             else:
-                left_message = chat_system2.getResponse(right_message, (lambda chat_history: [(b, a) for a, b in chat_history])(chat_history), left_character)
+                left_message = chat_system2.getResponse(right_message, chat_history, left_character, first_person=True)
                 right_message = chat_system3.getResponse(left_message, chat_history, right_character)
                 chat_history.append((left_message, right_message))
             yield chat_history
@@ -64,7 +64,7 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 left_message = chat_system2.getResponse(input_message, chat_history, left_character)
                 chat_history.append((input_message, left_message))
             else:
-                right_message = chat_system3.getResponse(left_message, (lambda chat_history: [(b, a) for a, b in chat_history])(chat_history), right_character)
+                right_message = chat_system3.getResponse(left_message, chat_history, right_character, first_person=True)
                 left_message = chat_system2.getResponse(right_message, chat_history, left_character)
                 chat_history.append((right_message, left_message))
             yield chat_history

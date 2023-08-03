@@ -62,7 +62,7 @@ class ChatSystem:
         self.chatHistory[character].append(all_history[-1])
         return
 
-    def getResponse(self, user_message, chat_history_tuple, character):
+    def getResponse(self, user_message, chat_history_tuple, character, first_person=False):
         pass
         # print("this is chathistory tuple: ", chat_history_tuple)
         chatPerson_character = self.getCharacter(character)
@@ -71,7 +71,7 @@ class ChatSystem:
         if (chatPerson_character.configuration["gpt"]):
             print("正在获取GPT回复")
             print("在给入GPT之前, 给入的history: ", chat_history_tuple)
-            response = chatPerson_character.getResponse(user_message, chat_history_tuple)
+            response = chatPerson_character.getResponse(user_message, chat_history_tuple, first_person=first_person)
             print("获取回复完毕")
             return response
     
@@ -146,12 +146,12 @@ class ChatPerson:
         self.ChatGPT = ChatGPT(self.configuration)
         self.ChatGPT.preload()
 
-    def getResponse(self, user_message, chat_history_tuple):
+    def getResponse(self, user_message, chat_history_tuple, first_person=False):
         pass
         # print("this is chathistory tuple: ", chat_history_tuple)
         if (self.configuration["gpt"]):
             # print("正在获取GPT回复")
-            response = self.ChatGPT.get_response(user_message, chat_history_tuple)
+            response = self.ChatGPT.get_response(user_message, chat_history_tuple, first_person=first_person)
             # print("获取回复完毕")
             return response
         
