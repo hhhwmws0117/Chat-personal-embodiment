@@ -67,10 +67,10 @@ def create_gradio(chat_system, chat_system2, chat_system3):
         # return chat_history, None
 
     def switchOneCharacterA(characterName, chat_history):  # TODO 双人对话中切换一个角色。或许和SwitchCharacter()非常类似。
-        chat_system2.addCharacter(character=characterName); return chat_history
+        chat_system2.addCharacter(character=characterName); return []
     
     def switchOneCharacterB(characterName, chat_history):  # TODO 双人对话中切换一个角色。或许和SwitchCharacter()非常类似。
-        chat_system3.addCharacter(character=characterName); return chat_history
+        chat_system3.addCharacter(character=characterName); return []
 
     def upload_file(file_obj):
         """上传文件，zipfile解压文件名乱码，单独用filenames保存"""
