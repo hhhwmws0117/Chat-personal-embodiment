@@ -107,7 +107,7 @@ def gen_params(appid, question):
             "chat": {
                 "domain": "general",
                 "random_threshold": 0.5,
-                "max_tokens": 2048,
+                "max_tokens": 4096,
                 "auditing": "default"
             }
         },
@@ -135,4 +135,4 @@ def chatAgent(question):
 
     return responses
 
-appid, api_key, api_secret, gpt_url = "", "", "", "ws://spark-api.xf-yun.com/v1.1/chat"
+appid, api_key, api_secret, gpt_url = "bf400b88", "2aac437c9f14c29bef4dc644296d5cf2", "MWM3NDQ4ZjQ3ZGY3YWYwZWU3YzI0MWI3", "ws://spark-api.xf-yun.com/v1.1/chat"

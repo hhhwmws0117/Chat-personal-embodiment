@@ -10,7 +10,7 @@ class ChatSystem:
         self.configuration = {}
         self.chatHistory = {}
         self.readConfig()
-        
+
         self.addCharacter()
         self.getAllCharacters()
 
@@ -20,13 +20,11 @@ class ChatSystem:
         self.config.read('config.ini', encoding='utf-8')
         self.sections = self.config.sections()
     
-    def addCharacter(self,character="DEFAULT"):
+    def addCharacter(self, character="DEFAULT"):
         pass
         if (character in self.characterList):
             return
         chatPerson = ChatPerson(character=character)
-        if (character == "DEFAULT"):
-            character = "凉宫春日"
         self.characterList[character] = chatPerson
         
     def getAllCharacters(self):
@@ -116,7 +114,7 @@ class ChatPerson:
         return checkCharacter(self.configuration)
         
         
-    def readConfig(self, character="DEFAULT"):
+    def readConfig(self, character="凉宫春日"):
         pass
         self.config = configparser.ConfigParser()
         self.config.read('config.ini', encoding='utf-8')
@@ -125,6 +123,7 @@ class ChatPerson:
         print(f"正在加载: {character} 角色")
         for key, value in items:
             self.configuration[key]=value
+        self.configuration["character"] = character
         print("配置文件载入完成")
 
     def loadCharacter(self):

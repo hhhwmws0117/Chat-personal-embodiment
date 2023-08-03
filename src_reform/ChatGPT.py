@@ -49,6 +49,7 @@ class ChatGPT:
     def __init__(self, configuration):
         self.configuration = configuration
         self.image_embed_jsonl_path = configuration['image_embed_jsonl_path']
+        self.character = configuration["character"]
         self.title_text_embed_jsonl_path = configuration['title_text_embed_jsonl_path']
         self.images_folder = configuration['images_folder']
         self.texts_folder = configuration['texts_folder']
@@ -207,8 +208,19 @@ class ChatGPT:
         #     HumanMessage(content=story)
         # ]
         messages = [
-            {'role': 'user', 'content': self.system_prompt + '\n' + story}
+            {'role': 'user', 'content': self.system_prompt + "\n" + story}
         ]
+        # for text in story.split("\n"):
+        #     if text.strip():
+        #         if ":" or "：" in text:
+        #             ch = ":" if ":" in text else "："
+        #             res = text.split(ch)
+        #             print(res[0])
+        #             print(self.character)
+        #             name = "assistant" if res[0] in self.character else "user"
+        #             messages.append({"role": name, "content": text})
+        #         else:
+        #             messages.append({"role": "user", "content": text})
 
         n = len(history_chat)
         if n != len(history_response):
@@ -264,8 +276,8 @@ class ChatGPT:
         responses = chatAgent(messages)
         return_msg = ""
         while not responses.empty():
-            return_msg += responses.get() # TODO 做成流式输出
+            return_msg += responses.get()  # TODO 做成流式输出
         # response = return_msg.content + "」"
-        response = return_msg
+        response = return_msg.split("\n")[0]
         print("Response:\n", response)
         return response

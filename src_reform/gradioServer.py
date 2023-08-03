@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import random
 from datetime import datetime
 from zipfile import ZipFile
 import time
@@ -9,8 +10,11 @@ from app import ChatPerson, ChatSystem
 from text import Text
 
 
-def create_gradio(chat_system):
+def create_gradio(chat_system, chat_system2):
     character_list = chat_system.getAllCharacters()
+    left_character_list = random.sample(character_list, int(len(character_list) / 2))
+    right_character_list = [item for item in character_list if item not in left_character_list]
+
     # from google.colab import drive
     # drive.mount(drive_path)
     def generate_user_id(ip_address):
@@ -64,10 +68,21 @@ def create_gradio(chat_system):
         return {gen: gr.update(visible=False),
                 chat: gr.update(visible=True)}
 
-    def dialogue(): # TODO 双人对话，类似函数respond()的功能 
-        pass
-    def switchOneCharacter(): # TODO 双人对话中切换一个角色。或许和SwitchCharacter()非常类似。
-        pass
+    def dialogue(left_character, right_character, chat_history):  # TODO 双人对话，类似函数respond()的功能
+        print(left_character)
+        left_message = chat_system.getResponse("我们结婚吧", (), left_character)
+        right_message = chat_system2.getResponse(left_message, (), right_character)
+        chat_history.append((left_message, right_message))
+        return "", chat_history
+
+    def switchOneCharacter(characterName):  # TODO 双人对话中切换一个角色。或许和SwitchCharacter()非常类似。
+        if characterName in left_character_list:
+            chat_system.addCharacter(character=characterName)
+        else:
+            chat_system2.addCharacter(character=characterName)
+        return []  # chatbot 清空
+
+
     with gr.Blocks() as demo:
         gr.Markdown(
             """
@@ -157,19 +172,28 @@ def create_gradio(chat_system):
                              outputs=[custom_msg, chatbot, image_input])
             # custom_audio_btn.click(fn=update_audio, inputs=[audio, japanese_output], outputs=audio)
             generate_btn.click(generate, role_name, [gen, chat])
+        def stopChat():
+            return
         with gr.Tab("Dialogue of Two Embodiments"):
             with gr.Row():
-                character1 = gr.Radio(character_list, label="CharacterA", value='凉宫春日')
-                character2 = gr.Radio(character_list, label="CharacterB", value='李云龙')
+                character1 = gr.Radio(left_character_list, label="CharacterA", value='凉宫春日')
+                character2 = gr.Radio(right_character_list, label="CharacterB", value='李云龙')
             with gr.Row():
                 chatbot = gr.Chatbot()
             with gr.Row():
                 begin1 = gr.Button(str(character1.value) + "先说")
                 begin2 = gr.Button(str(character2.value) + "先说")
-            character1.change(fn=switchOneCharacter) # TODO 
-            character2.change(fn=switchOneCharacter) # TODO
-            begin1.click(fn=dialogue) # TODO
-            begin2.click(fn=dialogue) # TODO
+            stop = gr.Button("Stop")
+            with gr.Row():
+                sum1 = gr.Textbox(label="总结1")
+                sum2 = gr.Textbox(label="总结2")
+
+            character1.change(fn=switchOneCharacter)  # TODO
+            character2.change(fn=switchOneCharacter)  # TODO
+            begin1.click(fn=dialogue, inputs=[character1, character2, chatbot], outputs=chatbot)  # TODO
+            begin2.click(fn=dialogue, inputs=[character1, character2, chatbot], outputs=chatbot)  # TODO
+            # chatbot.change
+            stop.click(fn=stopChat)
     demo.launch(debug=True, share=True)
 
 
@@ -177,4 +201,5 @@ def create_gradio(chat_system):
 # create_gradio(chat_person)
 
 chat_system = ChatSystem()
-create_gradio(chat_system)
+chat_system2 = ChatSystem()
+create_gradio(chat_system, chat_system2)
