@@ -8,8 +8,9 @@ import time
 import gradio as gr
 from app import ChatPerson, ChatSystem
 from text import Text
+import threading
 
-
+stopping = False
 def create_gradio(chat_system, chat_system2, chat_system3):
     character_list = chat_system.getAllCharacters()
     left_character_list = random.sample(character_list, int(len(character_list) / 2))
@@ -42,10 +43,12 @@ def create_gradio(chat_system, chat_system2, chat_system3):
 
     def dialogueA(left_character, right_character, chat_history):
         print(left_character)
+        global stopping
+        stopping = False
         chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
-        input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？' + '」'
+        input_message = left_character + ':「' + "你好呀," + right_character + '你有什么兴趣爱好吗？' + '」'
         left_message = right_message = ""
-        for i in range(3):
+        for i in range(20):
             if i == 0 and chat_history == []: # 第一轮
                 right_message = chat_system3.getResponse(input_message, chat_history, right_character)
                 chat_history.append((input_message, right_message))
@@ -53,13 +56,19 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 left_message = chat_system2.getResponse(right_message, chat_history, left_character, first_person=True)
                 right_message = chat_system3.getResponse(left_message, chat_history, right_character)
                 chat_history.append((left_message, right_message))
+            if stopping:
+                stopping = False
+                yield chat_history
+                return
             yield chat_history
     def dialogueB(left_character, right_character, chat_history):
-        print(left_character)
+        print(right_character)
+        global stopping
+        stopping = False
         chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
         input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？' + '」'
         left_message = right_message = ""
-        for i in range(3):
+        for i in range(20):
             if i == 0 and chat_history == []: # 第一轮
                 left_message = chat_system2.getResponse(input_message, chat_history, left_character)
                 chat_history.append((input_message, left_message))
@@ -67,6 +76,10 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 right_message = chat_system3.getResponse(left_message, chat_history, right_character, first_person=True)
                 left_message = chat_system2.getResponse(right_message, chat_history, left_character)
                 chat_history.append((right_message, left_message))
+            if stopping:
+                stopping = False
+                yield chat_history
+                return
             yield chat_history
 
     def getImage(query, character):
@@ -196,6 +209,8 @@ def create_gradio(chat_system, chat_system2, chat_system3):
             # custom_audio_btn.click(fn=update_audio, inputs=[audio, japanese_output], outputs=audio)
             generate_btn.click(generate, role_name, [gen, chat])
         def stopChat():
+            global stopping
+            stopping = True
             return
         with gr.Tab("Dialogue of Two Embodiments"):
             with gr.Row():
@@ -216,7 +231,7 @@ def create_gradio(chat_system, chat_system2, chat_system3):
             begin1.click(fn=dialogueA, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
             begin2.click(fn=dialogueB, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
             # chatbot.change
-            stop.click(fn=stopChat)
+            stop.click(fn=stopChat, queue=False)
     demo.queue().launch(debug=True, share=True)
 
 
