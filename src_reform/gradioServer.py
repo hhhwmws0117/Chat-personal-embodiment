@@ -145,9 +145,9 @@ False"""
                 left_eval = chatAgent([{'role': 'user',
                                         'content': "假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的" + left_character + "的情感与性格特点。对话：" + '\n'.join(
                                             [' - '.join(msg) for msg in chat_history])}])
-                right_eval = chatAgent([{'role': 'user',
-                                         'content': "假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的" + right_character + "的情感与性格特点。对话：" + '\n'.join(
-                                             [' - '.join(msg) for msg in chat_history])}])
+                # right_eval = chatAgent([{'role': 'user',
+                #                          'content': "假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的" + right_character + "的情感与性格特点。对话：" + '\n'.join(
+                #                              [' - '.join(msg) for msg in chat_history])}])
 
                 stopping = False
                 yield chat_history
@@ -288,11 +288,11 @@ False"""
                 begin1 = gr.Button("角色A先说")
                 begin2 = gr.Button("角色B先说")
             stop = gr.Button("Stop")
-            eval_1 = gr.Button("Evaluate A")
-            eval_2 = gr.Button("Evaluate B")
+            eval_1 = gr.Button("Evaluate")
+            # eval_2 = gr.Button("Evaluate B")
             with gr.Row():
                 sumbot1 = gr.Chatbot()
-                sumbot2 = gr.Chatbot()
+                # sumbot2 = gr.Chatbot()
 
             character1.change(fn=switchOneCharacterA, inputs=[character1, chatbot2], outputs=[chatbot2])  # TODO
             character2.change(fn=switchOneCharacterB, inputs=[character2, chatbot2], outputs=[chatbot2])  # TODO
@@ -300,7 +300,7 @@ False"""
             begin2.click(fn=dialogueB, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
             # chatbot.change
             eval_1.click(fn=feval_A, inputs=[sumbot1], outputs=sumbot1, queue=False)
-            eval_2.click(fn=feval_B, inputs=[sumbot2], outputs=sumbot2, queue=False)
+            # eval_2.click(fn=feval_B, inputs=[sumbot2], outputs=sumbot2, queue=False)
             stop.click(fn=stopChat, queue=False)
     demo.queue().launch(debug=True, share=True)
 

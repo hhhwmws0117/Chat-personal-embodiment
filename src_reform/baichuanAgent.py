@@ -135,4 +135,4 @@ def chatAgent(question):
 
     return responses
 
-appid, api_key, api_secret, gpt_url = "bf400b88", "2aac437c9f14c29bef4dc644296d5cf2", "MWM3NDQ4ZjQ3ZGY3YWYwZWU3YzI0MWI3", "ws://spark-api.xf-yun.com/v1.1/chat"
+appid, api_key, api_secret, gpt_url = "32d5ec23", "a187021347b0fff422f5c0a1222e06a8", "NGUwODFmOThmYTU0MTQ1ODE3Y2ZiZWZl", "ws://spark-api.xf-yun.com/v1.1/chat"

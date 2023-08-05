@@ -74,7 +74,7 @@ class generateCharacter:
         self.images_folder = self.configuration['images_folder']
         self.texts_folder = self.configuration['texts_folder']
         self.model = utils.download_models()
-        openai.api_key = "sk-A1rbhQJimhQAt7o9h" + "CxYT3BlbkFJA4odD8x3lNkUTNIcb5U5"
+        # openai.api_key = "sk-A1rbhQJimhQAt7o9h" + "CxYT3BlbkFJA4odD8x3lNkUTNIcb5U5"
 
 
     def generate_config(self):
@@ -163,7 +163,6 @@ if __name__ == '__main__':
     en_role_name = args.en_role_name
     prompt = args.prompt
     text_folder = args.text_folder
-    openai.api_key = "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"
     # ini 生成角色配置文件
     run = generateCharacter(cn_role_name, en_role_name, prompt)
     run.generate_config()
