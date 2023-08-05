@@ -4,12 +4,15 @@ import os
 import random
 from datetime import datetime
 from zipfile import ZipFile
+from queue import Queue
 import time
 import gradio as gr
 from app import ChatPerson, ChatSystem
 from text import Text
 import threading
-
+from baichuanAgent import chatAgent
+left_eval = ""
+right_eval = ""
 stopping = False
 def create_gradio(chat_system, chat_system2, chat_system3):
     character_list = chat_system.getAllCharacters()
@@ -56,7 +59,12 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 left_message = chat_system2.getResponse(right_message, chat_history, left_character, first_person=True)
                 right_message = chat_system3.getResponse(left_message, chat_history, right_character)
                 chat_history.append((left_message, right_message))
+            
             if stopping:
+                global left_eval,right_eval
+                left_eval = chatAgent([{'role': 'user', 'content':"假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的"+left_character+"的情感与性格特点。对话："+'\n'.join([' - '.join(msg) for msg in chat_history])}])
+                right_eval = chatAgent([{'role': 'user', 'content':"假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的"+right_character+"的情感与性格特点。对话："+'\n'.join([' - '.join(msg) for msg in chat_history])}])
+                
                 stopping = False
                 yield chat_history
                 return
@@ -77,6 +85,10 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 left_message = chat_system2.getResponse(right_message, chat_history, left_character)
                 chat_history.append((right_message, left_message))
             if stopping:
+                global right_eval,left_eval
+                left_eval = chatAgent([{'role': 'user', 'content':"假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的"+left_character+"的情感与性格特点。对话："+'\n'.join([' - '.join(msg) for msg in chat_history])}])
+                right_eval = chatAgent([{'role': 'user', 'content':"假设你是一个人类情感与性格分析师，请尝试从以下对话中分别阐述对话中出现的"+right_character+"的情感与性格特点。对话："+'\n'.join([' - '.join(msg) for msg in chat_history])}])
+                
                 stopping = False
                 yield chat_history
                 return
@@ -212,6 +224,19 @@ def create_gradio(chat_system, chat_system2, chat_system3):
             global stopping
             stopping = True
             return
+        def feval_A(chat_history):
+            global left_eval,right_eval
+            print(left_eval)
+            chat_history = []
+            chat_history.append(("","[" + "".join(str(item) for item in left_eval.queue) + "]"))
+            
+            yield chat_history
+        def feval_B(chat_history):
+            global left_eval,right_eval
+            print(right_eval)
+            chat_history = []
+            chat_history.append(("","[" + "".join(str(item) for item in right_eval.queue) + "]"))
+            yield chat_history
         with gr.Tab("Dialogue of Two Embodiments"):
             with gr.Row():
                 character1 = gr.Radio(character_list, label="CharacterA", value='凉宫春日')
@@ -222,15 +247,21 @@ def create_gradio(chat_system, chat_system2, chat_system3):
                 begin1 = gr.Button("角色A先说")
                 begin2 = gr.Button("角色B先说")
             stop = gr.Button("Stop")
+            eval_1 = gr.Button("Evaluate A")
+            eval_2 = gr.Button("Evaluate B")
             with gr.Row():
-                sum1 = gr.Textbox(label="总结1")
-                sum2 = gr.Textbox(label="总结2")
+                
+                sumbot1 = gr.Chatbot()
+                sumbot2 = gr.Chatbot()
+                
 
             character1.change(fn=switchOneCharacterA, inputs=[character1, chatbot2], outputs=[chatbot2])  # TODO
             character2.change(fn=switchOneCharacterB, inputs=[character2, chatbot2], outputs=[chatbot2])  # TODO
             begin1.click(fn=dialogueA, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
             begin2.click(fn=dialogueB, inputs=[character1, character2, chatbot2], outputs=chatbot2)  # TODO
             # chatbot.change
+            eval_1.click(fn=feval_A, inputs=[sumbot1], outputs=sumbot1 , queue=False)
+            eval_2.click(fn=feval_B, inputs=[sumbot2], outputs=sumbot2 , queue=False)
             stop.click(fn=stopChat, queue=False)
     demo.queue().launch(debug=True, share=True)
 
