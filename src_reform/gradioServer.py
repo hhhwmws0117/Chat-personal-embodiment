@@ -43,16 +43,49 @@ def create_gradio(chat_system, chat_system2, chat_system3):
         chat_history.append((input_message, bot_message))
         # chat_system.addChatHistory(character, chat_history)
         return "", chat_history, bot_message
-    
-    def checkMessage(response):
-        questions = ""
-        for question in first_questions:
-            questions += f"{question}\n"
-        messages = [{"role": "user", "content": response}]
-        prompt = f"""如果上述对话以一个较肯定的语气或者对方尝试结束对话为结尾，" \
-                 "请检查是否对话中包含了以下问题，{questions}，如果是,请回复`True`，如果不是，请回复`False`"""
-        messages.append({"role":"user", "content": prompt})
-        return chat_system.getResponse(user_message=messages, chat_history_tuple=("", ""))
+
+    def checkMessage(role1, role2, chat_history):
+        print("chat_history", chat_history)
+        if len(chat_history) != 0:
+            global stopping
+            messages = ""
+            for lis in chat_history:
+                print("lis", lis)
+                messages += lis[0] + "\n" + lis[1] + "\n"
+            res = checkMessage(character1, character2, chat_history)
+            response = ""
+            if res.empty() is not None:
+                response += res.get()
+            stopping = True if "True" in response else False
+            print("stopping", stopping)
+        from baichuanAgent import chatAgent
+        prompt = f"""你是一名高校的心理学教授叫做{role1}，正在邀请学生{role2}回答问题做心理测试
+请参考你们的聊天记录：
+{chat_history}
+你需要根据春日的回答探究是否你们的聊天是否对某一事件达成一致
+如果达成一致
+请返回`True`
+否则返回`False`
+
+example input：
+{role1}： 我们去吃饭把
+{role2}：好的呀
+example output：
+True
+
+example input:
+{role1}： 我们去吃饭把
+{role2}：吃什么
+example output:
+False"""
+        print(prompt)
+        messages = [{"role": "user", "content": prompt}]
+        return chatAgent(messages)
+
+    def checkStop(character1, character2, chat_history):
+
+        return
+
     def dialogueA(left_character, right_character, chat_history):
         print(left_character)
         global stopping
@@ -60,7 +93,8 @@ def create_gradio(chat_system, chat_system2, chat_system3):
         stopping = False
         chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
         # input_message = left_character + ':「' + right_character + '你有什么兴趣爱好吗？' + '」'
-        input_message = left_character + ':「'+ random.sample(first_questions, 1)[0]+'」'
+        question = random.sample(first_questions, 1)[0]
+        input_message = left_character + ':「'+ question+'」'
         left_message = right_message = ""
         for i in range(20):
             if i == 0 and chat_history == []: # 第一轮
