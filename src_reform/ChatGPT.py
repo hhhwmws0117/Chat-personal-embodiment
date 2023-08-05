@@ -208,19 +208,18 @@ class ChatGPT:
         #     HumanMessage(content=story)
         # ]
         messages = [
-            {'role': 'user', 'content': self.system_prompt + "\n" + story}
+            {'role': 'user', 'content': self.system_prompt + "\n```经典桥段"}
         ]
-        # for text in story.split("\n"):
-        #     if text.strip():
-        #         if ":" or "：" in text:
-        #             ch = ":" if ":" in text else "："
-        #             res = text.split(ch)
-        #             print(res[0])
-        #             print(self.character)
-        #             name = "assistant" if res[0] in self.character else "user"
-        #             messages.append({"role": name, "content": text})
-        #         else:
-        #             messages.append({"role": "user", "content": text})
+        for text in story.split("\n"):
+            if text.strip():
+                if ":" or "：" in text:
+                    ch = ":" if ":" in text else "："
+                    res = text.split(ch)
+                    name = "assistant" if res[0] in self.character else "user"
+                    messages.append({"role": name, "content": text})
+                # else:
+                #     messages.append({"role": "user", "content": text})
+        messages.append({"role": "user", "content": "```\nQuestion:"})
 
         n = len(history_chat)
         if n != len(history_response):
@@ -283,6 +282,5 @@ class ChatGPT:
         while not responses.empty():
             return_msg += responses.get()  # TODO 做成流式输出
         # response = return_msg.content + "」"
-        response = return_msg.split("\n")[0]
-        print("Response:\n", response)
-        return response
+        print("Response:\n", return_msg)
+        return return_msg.split("\n")[0]

@@ -11,6 +11,10 @@ from text import Text
 import threading
 
 stopping = False
+with open('./fist_questions.txt', 'r', encoding='utf-8') as f:
+    first_questions = f.read().strip().split("\n")
+
+
 def create_gradio(chat_system, chat_system2, chat_system3):
     character_list = chat_system.getAllCharacters()
     left_character_list = random.sample(character_list, int(len(character_list) / 2))
@@ -44,9 +48,11 @@ def create_gradio(chat_system, chat_system2, chat_system3):
     def dialogueA(left_character, right_character, chat_history):
         print(left_character)
         global stopping
+
         stopping = False
         chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
-        input_message = left_character + ':「' + "你好呀," + right_character + '你有什么兴趣爱好吗？' + '」'
+        # input_message = left_character + ':「' + right_character + '你有什么兴趣爱好吗？' + '」'
+        input_message = left_character + ':「'+ random.sample(first_questions, 1)[0]+'」'
         left_message = right_message = ""
         for i in range(20):
             if i == 0 and chat_history == []: # 第一轮
@@ -66,7 +72,8 @@ def create_gradio(chat_system, chat_system2, chat_system3):
         global stopping
         stopping = False
         chat_history = [] # 这里先清空历史记录。目前没有实现双方对话几轮之后被停止，然后又开始对话的功能。如果要实现，要考虑用户两次点击的先说的人不一样，这点处理历史记录很麻烦。所以这里先直接清空
-        input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？' + '」'
+        # input_message = right_character + ':「' + "你好呀," + left_character + '你有什么兴趣爱好吗？' + '」'
+        input_message = right_character + ':「' + random.sample(first_questions, 1)[0] + '」'
         left_message = right_message = ""
         for i in range(20):
             if i == 0 and chat_history == []: # 第一轮
