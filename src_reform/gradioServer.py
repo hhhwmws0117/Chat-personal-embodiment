@@ -44,7 +44,15 @@ def create_gradio(chat_system, chat_system2, chat_system3):
         # chat_system.addChatHistory(character, chat_history)
         return "", chat_history, bot_message
     
-
+    def checkMessage(response):
+        questions = ""
+        for question in first_questions:
+            questions += f"{question}\n"
+        messages = [{"role": "user", "content": response}]
+        prompt = f"""如果上述对话以一个较肯定的语气或者对方尝试结束对话为结尾，" \
+                 "请检查是否对话中包含了以下问题，{questions}，如果是,请回复`True`，如果不是，请回复`False`"""
+        messages.append({"role":"user", "content": prompt})
+        return chat_system.getResponse(user_message=messages, chat_history_tuple=("", ""))
     def dialogueA(left_character, right_character, chat_history):
         print(left_character)
         global stopping
@@ -249,3 +257,6 @@ chat_system = ChatSystem()
 chat_system2 = ChatSystem()
 chat_system3 = ChatSystem()
 create_gradio(chat_system, chat_system2, chat_system3)
+
+
+
