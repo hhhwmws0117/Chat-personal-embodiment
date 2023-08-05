@@ -65,7 +65,7 @@ class ChatGPT:
         self.enc = tiktoken.get_encoding("cl100k_base")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # 预加载jsonl文件
-        self.model = utils.model
+        self.model = utils.download_models()
         self.image_embed = None
         self.title_text_embed = None
         self.title_to_text = None
@@ -126,7 +126,7 @@ class ChatGPT:
         # else:
         #     # 计算query_embed
         #     jsonl = {}
-        #     embeddings = utils.get_embedding(self.model, texts[1:]).reshape(-1, 1536)
+        #     embeddings = utils.get_embedding(self.model, texts[1.txt:]).reshape(-1.txt, 1536)
         #     for text, embed in zip(texts, embeddings):
         #         jsonl[text] = embed
         texts_embeddings = np.array([value for value in jsonl.values()])

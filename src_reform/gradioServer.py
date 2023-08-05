@@ -11,6 +11,7 @@ from app import ChatPerson, ChatSystem
 from text import Text
 import threading
 from baichuanAgent import chatAgent
+from generate_character import generateCharacter
 
 left_eval = ""
 right_eval = ""
@@ -179,18 +180,13 @@ False"""
         chat_system3.addCharacter(character=characterName);
         return chat_history
 
-    def upload_file(file_obj):
-        """上传文件，zipfile解压文件名乱码，单独用filenames保存"""
-        filenames = []
+    def generateCustomCharacter(cn_role_name, en_role_name, prompt, file_obj):
+        run = generateCharacter(cn_role_name, en_role_name, prompt)
+        run.generate_config()
         with ZipFile(file_obj.name) as zfile:
-            zfile.extractall('./texts')
-        for filename in zfile.namelist():
-            filenames.append(filename.encode('cp437').decode('gbk'))
-        print(filenames)
-
-    def generate(file):
-        return {gen: gr.update(visible=False),
-                chat: gr.update(visible=True)}
+            zfile.extractall(run.texts_folder)
+        run.generate_jsonl()
+        return {res: gr.update(visible=True)}
 
     with gr.Blocks() as demo:
         gr.Markdown(
@@ -218,7 +214,7 @@ False"""
             # audio_store = gr.Textbox(interactive=False)
 
             # def update_audio(audio, japanese_output):
-            #     japanese_output = japanese_output.split("春日:")[1]
+            #     japanese_output = japanese_output.split("春日:")[1.txt]
             #     jp_audio_store = vits_haruhi.vits_haruhi(japanese_output, 4)
             #     return gr.update(value=jp_audio_store, visible=True)
 
@@ -241,46 +237,26 @@ False"""
             fileContent:
                 春日:「社团名字我刚刚已经想到了!」
                 阿虚:「……那你说来听听啊!」
-                春日:「SOS团!让世界变得更热闹的凉宫春日团，简称SOS团。」         
-    图片格式：图片文件夹打包成zip
-        图片名即为与该图片相似的文本  如 SOS团.jpg"""
+                春日:「SOS团!让世界变得更热闹的凉宫春日团，简称SOS团。」"""
+    # 图片格式：图片文件夹打包成zip
+    #     图片名即为与该图片相似的文本  如 SOS团.jpg"""
             with gr.Column() as gen:
                 with gr.Row():
                     with gr.Column():
                         # role_name
-                        role_name = gr.Textbox(label="role_name")
                         with gr.Row():
-                            texts = gr.File(label="Upload Texts")
-                            images = gr.File(label="Upload Images")
+                            cn_role_name = gr.Textbox(label="cn_role_name")
+                            en_role_name = gr.Textbox(label="en_role_name")
+                        texts = gr.File(label="Upload Texts")
+                        prompt = gr.Textbox(label="Edit Prompt")
+                        # images = gr.File(label="Upload Images")
                     rule = gr.Textbox(label="文件格式", lines=10)
                     rule.value = format_rule
+                res = gr.Textbox(label="res_msg", placeholder=f"已生成个人数字化身{cn_role_name.value}", visible=False)
                 generate_btn = gr.Button("生成")
+                generate_btn.click(fn=generateCustomCharacter, inputs=[cn_role_name, en_role_name, prompt, texts], outputs=res)
 
-            with gr.Column(visible=False) as chat:
-                custom_api_key = gr.Textbox(label="输入key", interactive=True, placeholder="sr-xxxxxxxx")
-                image_input = gr.Textbox(visible=False)
-                japanese_input = gr.Textbox(visible=False)
-                with gr.Row():
-                    custom_chatbot = gr.Chatbot()
-                    custom_image_output = gr.Image()
-                custom_audio = gr.Audio(visible=False)
-                custom_role_name = gr.Textbox(label="角色名")
-                custom_msg = gr.Textbox(label="输入")
-                with gr.Row():
-                    custom_clear = gr.Button("Clear")
-                    custom_image_button = gr.Button("给我一个图")
-                    # custom_audio_btn = gr.Button("春日和我说")
-                custom_japanese_output = gr.Textbox(interactive=False)
-                custom_sub = gr.Button("Submit")
 
-            # audio_store = gr.Textbox(interactive=False)
-
-            custom_clear.click(lambda: None, None, None, chatbot, queue=False)
-            # custom_msg.submit(respond, [api_key, role_name, custom_msg, chatbot], [msg, chatbot, image_input])
-            custom_sub.click(fn=respond, inputs=[role_name, custom_msg, chatbot],
-                             outputs=[custom_msg, chatbot, image_input])
-            # custom_audio_btn.click(fn=update_audio, inputs=[audio, japanese_output], outputs=audio)
-            generate_btn.click(generate, role_name, [gen, chat])
 
         def stopChat():
             global stopping
