@@ -1,6 +1,6 @@
 中文 | English | 日本語 | [赞助](#赞助) | [报告](https://github.com/hhhwmws0117/Chat-personal-embodiment/创新方案.pptx) | [特定人格的生成](https://github.com/LC1332/Chat-Haruhi-Suzumiya/tree/main/characters/personality-data)
 
-# 数字个人化身 Chat-personal-embodiment
+# 社交数字个人化身 Chat-personal-embodiment
 
 [![Code License](https://img.shields.io/badge/Code%20License-Apache_2.0-green.svg)]()
 [![Data License](https://img.shields.io/badge/Data%20License-CC%20By%20NC%204.0-red.svg)]()
