@@ -14,4 +14,4 @@
 
 注意：
 
-请于[星火认知大模型agent配置文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/demo_8_6.ipynb) 中修改您使用的APPID,APISecret和APIKey，请保证您使用中国境内IP调用大模型。
+请于[星火认知大模型agent配置文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/src_reform/baichuanAgent.py) 中修改您使用的APPID,APISecret和APIKey，请保证您使用中国境内IP调用大模型。
