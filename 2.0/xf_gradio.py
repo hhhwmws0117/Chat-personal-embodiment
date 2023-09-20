@@ -73,12 +73,14 @@ with gr.Blocks() as app:
                                   interactive=True)
                 # TODO 自动推算星座 day.change(inference, [month, day], constellations)
                 constellation = gr.Textbox(label="星座", placeholder="摩羯座")
-            sex = gr.Dropdown(choices=["男生", "女生", "保密"], label="Hi，你的性别是？", value="男生", interactive=True)
-            occupation = gr.Dropdown(
-                choices=["学生", "IT/互联网", "教育/科研", "医疗/护理", "建筑/房地产", "传媒/艺术", "人事/行政", "金融",
-                         "财会/审计", "自由职业"], label="我的行业/职业", value="学生", interactive=True)
-            school = gr.Textbox(label="我的学校", placeholder="清华大学")
-            label = gr.Dropdown(choices=["音乐", "二次元", "健身", "美食", "朋友圈摄影师", "声控", "篮球", "Steam", "电竞"],
+            with gr.Row():
+                sex = gr.Dropdown(choices=["男生", "女生", "保密"], label="Hi，你的性别是？", value="男生", interactive=True)
+                occupation = gr.Dropdown(
+                    choices=["学生", "IT/互联网", "教育/科研", "医疗/护理", "建筑/房地产", "传媒/艺术", "人事/行政", "金融",
+                             "财会/审计", "自由职业"], label="我的行业/职业", value="学生", interactive=True)
+            with gr.Row():
+                school = gr.Textbox(label="我的学校", placeholder="清华大学")
+                label = gr.Dropdown(choices=["音乐", "二次元", "健身", "美食", "朋友圈摄影师", "声控", "篮球", "Steam", "电竞"],
                                    multiselect=True, label="最后一步啦，选择我的标签")
             # begin soul test
             with gr.Row():
@@ -94,16 +96,31 @@ with gr.Blocks() as app:
                     allow_custom_value=True, multiselect=False)
             # error_msg or test result
             res_msg = gr.Textbox(label="soul message", placeholder="msg", visible=False)
+            keep = gr.Button("继续灵魂测试")
             # TODO1 也许我们可以做一份现有角色的灵魂测试 men - women
             # TODO2 现有的虚拟角色可以做为媒介，筛选出合适的用户作为推荐，或者说用户匹配的数据，要保存下来，用作推荐
-            keep = gr.Button("继续灵魂测试")
             q4 = gr.Dropdown([], label="", allow_custom_value=True, multiselect=False, visible=False)
-            characters = gr.Dropdown(["haruhi", "mikuru", "yuki", "itsuki", "kyon"], label="soul character", visible=False)
+            characters = gr.Dropdown(["凉宫春日", "汤师爷", "慕容复", "李云龙", "Luna", "王多鱼", "Ron",
+                                      "鸠摩智", "Snape", "Malfoy", "虚竹", "萧峰", "段誉", "Hermione", "Dumbledore",
+                                      "王语嫣", "Harry", "McGonagall", "白展堂", "佟湘玉", "郭芙蓉", "旅行者",
+                                      "钟离", "胡桃", "Sheldon", "Raj", "Penny", "韦小宝", "乔峰", "神里绫华", "雷电将军",
+                                      "于谦"], label="soul character", visible=True)
+            """
+            {'汤师爷': 'tangshiye', '慕容复': 'murongfu', '李云龙': 'liyunlong', 'Luna': 'Luna', '王多鱼': 'wangduoyu',
+            'Ron': 'Ron', '鸠摩智': 'jiumozhi', 'Snape': 'Snape',
+            '凉宫春日': 'haruhi', 'Malfoy': 'Malfoy', '虚竹': 'xuzhu', '萧峰': 'xiaofeng', '段誉': 'duanyu',
+            'Hermione': 'Hermione', 'Dumbledore': 'Dumbledore', '王语嫣': 'wangyuyan',
+            'Harry': 'Harry', 'McGonagall': 'McGonagall', '白展堂': 'baizhantang', '佟湘玉': 'tongxiangyu',
+            '郭芙蓉': 'guofurong', '旅行者': 'wanderer', '钟离': 'zhongli',
+            '胡桃': 'hutao', 'Sheldon': 'Sheldon', 'Raj': 'Raj', 'Penny': 'Penny', '韦小宝': 'weixiaobao',
+            '乔峰': 'qiaofeng', '神里绫华': 'ayaka', '雷电将军': 'raidenShogun', '于谦': 'yuqian'}
+            """
             with gr.Row():
-                chat = gr.Button("soul search")
-                sumit = gr.Button("提交灵魂测试")
+                chat = gr.Button("提交灵魂测试")
+        chatbot = gr.Chatbot()
         soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
         keep.click(fn=chat_psychologist, inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
+        chat.click()
     # end soul test
 
 app.launch(debug=True)
