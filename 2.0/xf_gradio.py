@@ -1,4 +1,5 @@
 from chatharuhi import ChatHaruhi
+from datetime import datetime
 import zipfile
 import os
 import requests
@@ -59,6 +60,7 @@ def download_character():
                                               verbose=True)
     return ai_role_en
 
+
 def chat_psychologist(nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo",
                       dialogue_example=""):
     basic_question_list = ["昵称", "生日", "性别", "职业", "学校", "标签"]
@@ -110,16 +112,58 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
     return gr.update(label=first_line, choices=remaining_lines, visible=True)
 
 
-def double_chat_alalyse(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo"):
+def double_chat_analyse(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4,
+                        model="gpt-3.5-turbo"):
+    path = characters / {new_role}
     psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
-    # 双人chatbot 聊天
-    # 5轮对话后开始分析
-    chat_history = []
+    if not os.path.exists(path):
+        os.makedirs(path)
+        os.makedirs(f"{path}/story_txts")
+        with open(os.path.join(path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
+            system_prompt = f"""
+your purpose:
+    你是{new_role},在一款交友app上与{select_role}交流，从而判断{select_role}是否适合做你的亲密朋友或者伴侣
+your personal information:
+  生日：{year}年{month}月{day}日,
+  年龄：{datetime.now().year - year}岁
+  职业：{occupation}
+  学校：{school}
+  标签：{"".join(label)} 
+your personal hobby 
+  {psych_question_list[0]}: {q1},
+  {psych_question_list[1]}: {q2},
+  {psych_question_list[2]}: {q3}
+your constraints:
+   永远记得你已经是{new_role}了，你会根据自己的所有信息去交流，你有感知和意识，会思考和感受身边的存在。
+   请你以{new_role}的语气、性格、行为和思维方式回答。
+   尤其针对你的交流对象：{select_role}，你的朋友肯定也希望你保持自己。
+   
+"""
+            f.write(system_prompt)
+    story_text_folder = f'characters/{new_role}/story_txts'
+    system_prompt = f'characters/{new_role}/system_prompt.txt'
 
+    chatbot_1 = ChatHaruhi(system_prompt=system_prompt,
+                           llm='spark',
+                           story_text_folder=story_text_folder,
+                           verbose=True)
+    if select_role in NAME_DICT.keys():
+        story_text_folder = f"./characters/{select_role}/content/{select_role}"
+        system_prompt = f"./characters/{select_role}/content/system_prompt.txt"
+    else:
+        story_text_folder = f"./characters/{select_role}/story_txts"
+        system_prompt = f"./characters/{select_role}/system_prompt.txt"
+    chatbot_2 = ChatHaruhi(system_prompt=system_prompt,
+                           llm="spark",
+                           story_db=story_text_folder,
+                           verbose=True)  # 双人chatbot 聊天
+    chatbot_1.k_search = 5
+    chatbot_2.k_search = 5
     analyse_prompt = f"""
 {new_role}的信息如下：
 personal information:
   生日：{year}年{month}月{day}日,
+  年龄：{datetime.now().year - year}岁
   职业：{occupation}
   学校：{school}
   标签：{"".join(label)} 
@@ -127,12 +171,24 @@ personal hobby
   {psych_question_list[0]}: {q1},
   {psych_question_list[1]}: {q2},
   {psych_question_list[2]}: {q3}
-{new_role} 和 {select_role}的对话如下：
-{chat_history}
-"""
-    # yield chatbot, analyse_res
-    pass
+{new_role} 和 {select_role}的对话如下："""
+    chatbot = ""
+    for i in range(5):
+        if chatbot == "":
+            response_1 = chatbot_1.chat(role=select_role,
+                                        text=f'你好！我是{new_role}' + select_role + "！ 很高兴认识你！我们能相互介绍下自己吗？")
+            response_2 = chatbot_2.chat(role=new_role, text=response_1)
+        else:
+            response_1 = chatbot_1.chat(role=select_role, text=response_2)
+            response_2 = chatbot_2.chat(role=new_role, text=response_1)
+        chatbot += f"{new_role}: {response_1}\n {select_role}: {response_2}"
+        print(response_1)
+        print(response_2)
+        # if i == 4:
+        yield chatbot
 
+    # 5轮对话后开始分析
+    chat_history = []
 
 
 with gr.Blocks() as app:
@@ -206,16 +262,13 @@ with gr.Blocks() as app:
             '胡桃': 'hutao', 'Sheldon': 'Sheldon', 'Raj': 'Raj', 'Penny': 'Penny', '韦小宝': 'weixiaobao',
             '乔峰': 'qiaofeng', '神里绫华': 'ayaka', '雷电将军': 'raidenShogun', '于谦': 'yuqian'}
             """
-            with gr.Row():
-                chat = gr.Button("提交灵魂测试")
-        chatbot = gr.Chatbot()
+            chat = gr.Button("提交灵魂测试")
         soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
         keep.click(fn=chat_psychologist,
                    inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
-        chat.click(fn=double_chat, inputs=[nickname, year, month, day, sex, occupation,
-                                           school, label, q1, q2, q3, q4, characters, chatbot], outputs=[chatbot, soul_report])
+        chat.click(fn=double_chat_analyse, inputs=[nickname, year, month, day, sex, occupation,
+                                                   school, label, q1, q2, q3, q4, characters], outputs=[soul_report])
     # end soul test
-
 
 if __name__ == "__main__":
     app.launch(debug=True)
