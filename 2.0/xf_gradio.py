@@ -109,8 +109,31 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
     print(remaining_lines)
     return gr.update(label=first_line, choices=remaining_lines, visible=True)
 
-def double_chat():
+
+def double_chat_alalyse(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo"):
+    psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
+    # 双人chatbot 聊天
+    # 5轮对话后开始分析
+    chat_history = []
+
+    analyse_prompt = f"""
+{new_role}的信息如下：
+personal information:
+  生日：{year}年{month}月{day}日,
+  职业：{occupation}
+  学校：{school}
+  标签：{"".join(label)} 
+personal hobby 
+  {psych_question_list[0]}: {q1},
+  {psych_question_list[1]}: {q2},
+  {psych_question_list[2]}: {q3}
+{new_role} 和 {select_role}的对话如下：
+{chat_history}
+"""
+    # yield chatbot, analyse_res
     pass
+
+
 
 with gr.Blocks() as app:
     gr.Markdown(
@@ -189,7 +212,8 @@ with gr.Blocks() as app:
         soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
         keep.click(fn=chat_psychologist,
                    inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
-        chat.click(fn=double_chat, inputs=[])
+        chat.click(fn=double_chat, inputs=[nickname, year, month, day, sex, occupation,
+                                           school, label, q1, q2, q3, q4, characters, chatbot], outputs=[chatbot, soul_report])
     # end soul test
 
 

@@ -6,6 +6,7 @@
 - [x] 继续灵魂测试接入正常
 - [ ] 根据已知信息生成prompt
       粗暴一点，先保存在txt吧，hhhh
+- [ ] 先聊上，再考虑存储
 - [ ] 接入soul test, gradio启动时，下载所有chromadb，选中角色后，生成新建角色的system_prompt, 开启双人对话
 - [ ] 接入analysis_from_history
 - [ ] 接入store_file_standard
@@ -55,3 +56,10 @@ system_prompt2 with character
   - 支持识别纸质文字，形成个人story
   - 各个平台的文本导出
   - messages = chat_history + system_prompt + story + q
+
+- 逻辑
+  - username 限制，如果重复则提示
+  - 先填表
+  - 开始聊天
+  - 分析，给出报告
+  - 
