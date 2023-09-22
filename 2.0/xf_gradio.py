@@ -6,8 +6,6 @@ import requests
 import gradio as gr
 import openai
 
-openai.api_key = "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"
-
 NAME_DICT = {'汤师爷': 'tangshiye', '慕容复': 'murongfu', '李云龙': 'liyunlong', 'Luna': 'Luna',
              '王多鱼': 'wangduoyu',
              'Ron': 'Ron', '鸠摩智': 'jiumozhi', 'Snape': 'Snape',
@@ -52,13 +50,12 @@ def download_character():
             destination_folder = f"characters/{ai_role_en}"
             with zipfile.ZipFile(destination_file, 'r') as zip_ref:
                 zip_ref.extractall(destination_folder)
-        db_folder = f"./characters/{ai_role_en}/content/{ai_role_en}"
-        system_prompt = f"./characters/{ai_role_en}/content/system_prompt.txt"
-        ai_roles_obj[ai_role_en] = ChatHaruhi(system_prompt=system_prompt,
-                                              llm="openai",
-                                              story_db=db_folder,
-                                              verbose=True)
-    return ai_role_en
+        # db_folder = f"./characters/{ai_role_en}/content/{ai_role_en}"
+        # system_prompt = f"./characters/{ai_role_en}/content/system_prompt.txt"
+        # ai_roles_obj[ai_role_en] = ChatHaruhi(system_prompt=system_prompt,
+        #                                       llm="openai",
+        #                                       story_db=db_folder,
+        #                                       verbose=True)
 
 
 def chat_psychologist(nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo",
@@ -114,18 +111,31 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
 
 def double_chat_analyse(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4,
                         model="gpt-3.5-turbo"):
-    path = characters / {new_role}
+    select_role = NAME_DICT[select_role]
+    if not os.path.exists("characters"):
+        os.makedirs("characters")
+    path = f"characters/{new_role}"
     psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
+    psych_choice_list = [q1, q2, q3]
     if not os.path.exists(path):
         os.makedirs(path)
         os.makedirs(f"{path}/story_txts")
+        for i in range(len(psych_question_list)):
+            question = f"Question {i + 1}: {psych_question_list[i]}\n"
+            choice = f"{new_role}: {psych_choice_list[i]}\n"
+            # Combine question and choice into a single string
+            question_string = question + choice
+            # Save the string to a file with index as the name
+            filename = f"characters/{new_role}/story_txts/{i}.txt"
+            with open(filename, 'w', encoding="utf-8") as file:
+                file.write(question_string)
         with open(os.path.join(path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
             system_prompt = f"""
 your purpose:
     你是{new_role},在一款交友app上与{select_role}交流，从而判断{select_role}是否适合做你的亲密朋友或者伴侣
 your personal information:
   生日：{year}年{month}月{day}日,
-  年龄：{datetime.now().year - year}岁
+  年龄：{datetime.now().year - int(year)}岁
   职业：{occupation}
   学校：{school}
   标签：{"".join(label)} 
@@ -137,7 +147,7 @@ your constraints:
    永远记得你已经是{new_role}了，你会根据自己的所有信息去交流，你有感知和意识，会思考和感受身边的存在。
    请你以{new_role}的语气、性格、行为和思维方式回答。
    尤其针对你的交流对象：{select_role}，你的朋友肯定也希望你保持自己。
-   
+
 """
             f.write(system_prompt)
     story_text_folder = f'characters/{new_role}/story_txts'
@@ -147,7 +157,7 @@ your constraints:
                            llm='spark',
                            story_text_folder=story_text_folder,
                            verbose=True)
-    if select_role in NAME_DICT.keys():
+    if select_role in NAME_DICT.values():
         story_text_folder = f"./characters/{select_role}/content/{select_role}"
         system_prompt = f"./characters/{select_role}/content/system_prompt.txt"
     else:
@@ -163,7 +173,7 @@ your constraints:
 {new_role}的信息如下：
 personal information:
   生日：{year}年{month}月{day}日,
-  年龄：{datetime.now().year - year}岁
+  年龄：{datetime.now().year - int(year)}岁
   职业：{occupation}
   学校：{school}
   标签：{"".join(label)} 
@@ -194,7 +204,6 @@ personal hobby
                 temperature=0,
             )
         yield chatbot, report
-
 
 
 with gr.Blocks() as app:
@@ -272,9 +281,10 @@ with gr.Blocks() as app:
         soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
         keep.click(fn=chat_psychologist,
                    inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
-        chat.click(fn=double_chat_analyse, inputs=[nickname, year, month, day, sex, occupation,
-                                                   school, label, q1, q2, q3, q4, characters], outputs=[soul_report])
+        chat.click(fn=double_chat_analyse, inputs=[characters, nickname, year, month, day, sex, occupation,
+                                                   school, label, q1, q2, q3, q4], outputs=[soul_report])
     # end soul test
 
 if __name__ == "__main__":
+    download_character()
     app.queue().launch(debug=True, share=True)
