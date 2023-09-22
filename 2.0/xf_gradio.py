@@ -173,6 +173,7 @@ personal hobby
   {psych_question_list[2]}: {q3}
 {new_role} 和 {select_role}的对话如下："""
     chatbot = ""
+    report = ""
     for i in range(5):
         if chatbot == "":
             response_1 = chatbot_1.chat(role=select_role,
@@ -184,11 +185,16 @@ personal hobby
         chatbot += f"{new_role}: {response_1}\n {select_role}: {response_2}"
         print(response_1)
         print(response_2)
-        # if i == 4:
-        yield chatbot
+        if i == 4:
+            analyse_prompt += f"\n{chatbot}"
+            messages = [{"role": "user", "content": analyse_prompt}]
+            report = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0,
+            )
+        yield chatbot, report
 
-    # 5轮对话后开始分析
-    chat_history = []
 
 
 with gr.Blocks() as app:
