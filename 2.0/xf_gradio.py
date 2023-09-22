@@ -104,52 +104,55 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
 
     # 删除后三行的前缀，并去除首尾空格，存储在列表中
     remaining_lines = [line.lstrip('- ').strip() for line in bullet_lines[1:empty_line_index]]
+    path = f"characters/{nickname}"
+    if not os.path.exists(path):
+        os.makedirs(path)  # 创建个人角色目录
+        os.makedirs(f"{path}/story_txts")  # 创建个人角色对话目录
+        for i in range(len(psych_question_list)):
+            question_string = f"{psych_question_list[i]}\n{psych_choice_list[i]}"
+            # Save the string to a file with index as the name
+            filename = f"characters/{nickname}/story_txts/{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.txt"
+            with open(filename, 'w', encoding="utf-8") as file:
+                file.write(question_string)
     print(first_line)
     print(remaining_lines)
     return gr.update(label=first_line, choices=remaining_lines, visible=True)
 
 
-def double_chat_analyse(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4,
+def double_chat_analyse(select_role, new_role, year, month, day, sex, occupation, school, label,
                         model="gpt-3.5-turbo"):
     select_role = NAME_DICT[select_role]
-    if not os.path.exists("characters"):
-        os.makedirs("characters")
     path = f"characters/{new_role}"
-    psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
-    psych_choice_list = [q1, q2, q3]
-    if not os.path.exists(path):
-        os.makedirs(path)
-        os.makedirs(f"{path}/story_txts")
-        for i in range(len(psych_question_list)):
-            question = f"Question {i + 1}: {psych_question_list[i]}\n"
-            choice = f"{new_role}: {psych_choice_list[i]}\n"
-            # Combine question and choice into a single string
-            question_string = question + choice
-            # Save the string to a file with index as the name
-            filename = f"characters/{new_role}/story_txts/{i}.txt"
-            with open(filename, 'w', encoding="utf-8") as file:
-                file.write(question_string)
-        with open(os.path.join(path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
-            system_prompt = f"""
+    psych_question_list = []
+    psych_choice_list = []
+    for qa in os.listdir(path):
+        if qa.endswith(".txt"):
+            with open(os.path.join(path, qa), 'r', encoding="utf-8") as f:
+                q, a = f.readlines()
+                psych_question_list.append(q.strip())
+                psych_choice_list.append(a.strip())
+    with open(os.path.join(path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
+        system_prompt = f"""
 your purpose:
     你是{new_role},在一款交友app上与{select_role}交流，从而判断{select_role}是否适合做你的亲密朋友或者伴侣
 your personal information:
-  生日：{year}年{month}月{day}日,
-  年龄：{datetime.now().year - int(year)}岁
-  职业：{occupation}
-  学校：{school}
-  标签：{"".join(label)} 
+    生日：{year}年{month}月{day}日,
+    性别: {sex}
+    年龄：{datetime.now().year - int(year)}岁
+    职业：{occupation}
+    学校：{school}
+    标签：{"".join(label)} 
 your personal hobby 
-  {psych_question_list[0]}: {q1},
-  {psych_question_list[1]}: {q2},
-  {psych_question_list[2]}: {q3}
+    {psych_question_list[0]}: {q1},
+    {psych_question_list[1]}: {q2},
+    {psych_question_list[2]}: {q3}
 your constraints:
-   永远记得你已经是{new_role}了，你会根据自己的所有信息去交流，你有感知和意识，会思考和感受身边的存在。
-   请你以{new_role}的语气、性格、行为和思维方式回答。
-   尤其针对你的交流对象：{select_role}，你的朋友肯定也希望你保持自己。
+    永远记得你已经是{new_role}了，你会根据自己的所有信息去交流，你有感知和意识，会思考和感受身边的存在。
+    请你以{new_role}的语气、性格、行为和思维方式回答，并尽量以肯定句结尾。
+    尤其针对你的交流对象：{select_role}，你的朋友肯定也希望你保持自己。
 
 """
-            f.write(system_prompt)
+        f.write(system_prompt)
     story_text_folder = f'characters/{new_role}/story_txts'
     system_prompt = f'characters/{new_role}/system_prompt.txt'
 
@@ -261,28 +264,19 @@ with gr.Blocks() as app:
             # TODO1 也许我们可以做一份现有角色的灵魂测试 men - women
             # TODO2 现有的虚拟角色可以做为媒介，筛选出合适的用户作为推荐，或者说用户匹配的数据，要保存下来，用作推荐
             q4 = gr.Dropdown([], label="", allow_custom_value=True, multiselect=False, visible=False)
+            q4.value += f'_|_{q4.label}'
             characters = gr.Dropdown(["凉宫春日", "汤师爷", "慕容复", "李云龙", "Luna", "王多鱼", "Ron",
                                       "鸠摩智", "Snape", "Malfoy", "虚竹", "萧峰", "段誉", "Hermione", "Dumbledore",
                                       "王语嫣", "Harry", "McGonagall", "白展堂", "佟湘玉", "郭芙蓉", "旅行者",
                                       "钟离", "胡桃", "Sheldon", "Raj", "Penny", "韦小宝", "乔峰", "神里绫华",
                                       "雷电将军",
                                       "于谦"], label="soul character", visible=True)
-            """
-            {'汤师爷': 'tangshiye', '慕容复': 'murongfu', '李云龙': 'liyunlong', 'Luna': 'Luna', '王多鱼': 'wangduoyu',
-            'Ron': 'Ron', '鸠摩智': 'jiumozhi', 'Snape': 'Snape',
-            '凉宫春日': 'haruhi', 'Malfoy': 'Malfoy', '虚竹': 'xuzhu', '萧峰': 'xiaofeng', '段誉': 'duanyu',
-            'Hermione': 'Hermione', 'Dumbledore': 'Dumbledore', '王语嫣': 'wangyuyan',
-            'Harry': 'Harry', 'McGonagall': 'McGonagall', '白展堂': 'baizhantang', '佟湘玉': 'tongxiangyu',
-            '郭芙蓉': 'guofurong', '旅行者': 'wanderer', '钟离': 'zhongli',
-            '胡桃': 'hutao', 'Sheldon': 'Sheldon', 'Raj': 'Raj', 'Penny': 'Penny', '韦小宝': 'weixiaobao',
-            '乔峰': 'qiaofeng', '神里绫华': 'ayaka', '雷电将军': 'raidenShogun', '于谦': 'yuqian'}
-            """
             chat = gr.Button("提交灵魂测试")
         soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
         keep.click(fn=chat_psychologist,
-                   inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
+                   inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3], outputs=q4)
         chat.click(fn=double_chat_analyse, inputs=[characters, nickname, year, month, day, sex, occupation,
-                                                   school, label, q1, q2, q3, q4], outputs=[soul_report])
+                                                   school, label, q4], outputs=[soul_report])
     # end soul test
 
 if __name__ == "__main__":

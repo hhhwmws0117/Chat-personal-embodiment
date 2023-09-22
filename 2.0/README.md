@@ -4,13 +4,17 @@
 - [x] 继续灵魂测试
 - [x] 基础的gradio
 - [x] 继续灵魂测试接入正常
-- [ ] 根据已知信息生成prompt
+- [x] 根据已知信息生成prompt
       粗暴一点，先保存在txt吧，hhhh
-- [ ] 先聊上，再考虑存储
-- [ ] 接入soul test, gradio启动时，下载所有chromadb，选中角色后，生成新建角色的system_prompt, 开启双人对话
-- [ ] 接入analysis_from_history
+- [x] 先聊上，再考虑存储
+- [x] 接入soul test, gradio启动时，下载所有chromadb，选中角色后，生成新建角色的system_prompt, 开启双人对话
+- [x] 接入analysis_from_history
 - [ ] 接入store_file_standard
-- [ ] 实时更新新创建的角色
+- [ ] 如果多次灵魂测试把之前的灵魂测试放进prompt，
+      继续灵魂测试会把q1，q2，q3，存入story_txts中。
+      double_chat 不用传入直接从story_txts中读取, 新的q4要保存
+- [ ] 实时更新新创建的角色 ，查询角色按钮
+- [ ] 聊天记录的保存
 
 
 role1 personal information:
