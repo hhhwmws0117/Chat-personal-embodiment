@@ -277,4 +277,4 @@ with gr.Blocks() as app:
     # end soul test
 
 if __name__ == "__main__":
-    app.launch(debug=True)
+    app.queue().launch(debug=True, share=True)
