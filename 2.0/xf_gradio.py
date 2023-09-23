@@ -7,6 +7,8 @@ import requests
 import gradio as gr
 import openai
 
+openai.api_key = "sk-mmJ"
+os.environ["OPENAI_API_KEY"] = openai.api_key
 NAME_DICT = {'汤师爷': 'tangshiye', '慕容复': 'murongfu', '李云龙': 'liyunlong', 'Luna': 'Luna',
              '王多鱼': 'wangduoyu',
              'Ron': 'Ron', '鸠摩智': 'jiumozhi', 'Snape': 'Snape',
@@ -66,26 +68,27 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
         for i in range(len(psych_question_list)):
             question_string = f"{psych_question_list[i]}\n{psych_choice_list[i]}"
             # Save the string to a file with index as the name
-            filename = f"{txts_path}/q{i+1}.txt"
-            with open(filename, 'w', encoding="utf-8") as file:
+            filename = f"{txts_path}/q{i + 1}.txt"
+            with open(filename, 'w+', encoding="utf-8") as file:
                 file.write(question_string)
-        INDEX = 3
+        INDEX = 4
     else:
         list_of_dirs = os.listdir(txts_path)
         pattern = r"^q\d+\.txt$"
         matched_dirs = [s for s in list_of_dirs if re.match(pattern, s)]
-        INDEX = len(matched_dirs)  # 新的问题的 index
+        INDEX = len(matched_dirs) + 1  # 新的问题的 index
         if len(matched_dirs) > 3:
             for i, dir in enumerate(matched_dirs[3:]):
-                with open(f"{txts_path}/{dir}") as f:
-                    q, a = f.readlines()
-                    psych_question_list.append(q.strip())
-                    if i != len(matched_dirs[3:]-1):
+                with open(f"{txts_path}/{dir}", 'r', encoding='utf-8') as f:
+                    if i != len(matched_dirs[3:]) - 1:  # 已有的问题
+                        q, a = f.readlines()
                         psych_choice_list.append(a.strip())
-                    else: # 新的问题
+                    else:  # 新的问题
+                        q = f.readlines()[0]
                         psych_choice_list.append(q4)
-            with open(f"{txts_path}/{matched_dirs[-1]}", 'a') as f:
-                f.write("\n"+q4)  # 写入回答
+                    psych_question_list.append(q.strip())
+            with open(f"{txts_path}/{matched_dirs[-1]}", 'a', encoding='utf-8') as f:
+                f.write("\n" + q4)  # 写入回答
 
     system_prompt = "我想让你扮演一个心理测量专家，请针对你的心理被测对象的基本特征和一些对于基本心里问题的回答进行工作,你面对的心理被测对象是一个具有如下基本特征的人：\n"
     basic_result = ""
@@ -128,7 +131,7 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
     # 删除后三行的前缀，并去除首尾空格，存储在列表中
     remaining_lines = [line.lstrip('- ').strip() for line in bullet_lines[1:empty_line_index]]
     # 写入新的问题
-    with open(f"{txts_path}/q{INDEX}.txt", 'w') as f:
+    with open(f"{txts_path}/q{INDEX}.txt", 'w', encoding='utf-8') as f:
         f.write(first_line)
 
     print(first_line)
@@ -136,19 +139,34 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
     return gr.update(label=first_line, choices=remaining_lines, visible=True)
 
 
-def double_chat(select_role, new_role, year, month, day, sex, occupation, school, label, chatbot,
-                        model="gpt-3.5-turbo"):
-    select_role = NAME_DICT[select_role]
+def double_chat(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, chatbot,
+                model="gpt-3.5-turbo"):
     role_path = f"characters/custom/{new_role}"
     txts_path = f"{role_path}/story_txts"
-    psych_question_list = []
-    psych_choice_list = []
-    for qa in os.listdir(txts_path):
-        if qa.endswith(".txt"):
-            with open(os.path.join(txts_path, qa), 'r', encoding="utf-8") as f:
-                q, a = f.readlines()
-                psych_question_list.append(q.strip())
-                psych_choice_list.append(a.strip())
+    select_role = NAME_DICT[select_role]
+    if not os.path.exists(role_path):  # TODO 这部分可以抽取成一个函数，先这样吧
+        os.makedirs(role_path)  # 创建个人角色目录
+        os.makedirs(txts_path)  # 创建个人角色对话目录
+        psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
+        psych_choice_list = [q1, q2, q3]
+        for i in range(len(psych_question_list)):
+            question_string = f"{psych_question_list[i]}\n{psych_choice_list[i]}"
+            # Save the string to a file with index as the name
+            filename = f"{txts_path}/q{i + 1}.txt"
+            with open(filename, 'w+', encoding="utf-8") as file:
+                file.write(question_string)
+    else:  # 有继续灵魂测试
+        psych_question_list = []
+        psych_choice_list = []
+        for qa in os.listdir(txts_path):
+            if qa.endswith(".txt"):
+                with open(os.path.join(txts_path, qa), 'r', encoding="utf-8") as f:
+                    try:
+                        q, a = f.readlines()  # 最后一个灵魂测试问题没有答案。。。。
+                    except:
+                        pass
+                    psych_question_list.append(q.strip())
+                    psych_choice_list.append(a.strip())
     with open(os.path.join(role_path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
         system_prompt = f"""
 your purpose:
@@ -174,7 +192,7 @@ your constraints:
     system_prompt = f'{role_path}/system_prompt.txt'
 
     chatbot_1 = ChatHaruhi(system_prompt=system_prompt,
-                           llm='spark',
+                           llm='openai',
                            story_text_folder=story_text_folder,
                            verbose=True)
     if select_role in NAME_DICT.values():
@@ -184,13 +202,13 @@ your constraints:
         story_text_folder = f"./characters/custom/{select_role}/story_txts"
         system_prompt = f"./characters/custom/{select_role}/system_prompt.txt"
     chatbot_2 = ChatHaruhi(system_prompt=system_prompt,
-                           llm="spark",
+                           llm="openai",
                            story_db=story_text_folder,
                            verbose=True)  # 双人chatbot 聊天
     chatbot_1.k_search = 5
     chatbot_2.k_search = 5
     for i in range(5):
-        if chatbot == "":
+        if len(chatbot) == 0:
             response_1 = chatbot_1.chat(role=select_role,
                                         text=f'你好！我是{new_role}' + select_role + "！ 很高兴认识你！我们能相互介绍下自己吗？")
             response_2 = chatbot_2.chat(role=new_role, text=response_1)
@@ -226,7 +244,7 @@ your constraints：
         messages=messages,
         temperature=0,
     )
-    return report
+    return report.choices[0].message["content"]
 
 
 with gr.Blocks() as app:
@@ -235,7 +253,7 @@ with gr.Blocks() as app:
            Chat-Haruhi-Suzumiya
         """
     )
-    with gr.Tab:
+    with gr.Tab(label="创建角色"):
         with gr.Row(equal_height=True):
             with gr.Column():
                 nickname = gr.Textbox(label="对了，你的昵称是？", placeholder="Haruhi")
@@ -246,7 +264,8 @@ with gr.Blocks() as app:
                     month = gr.Dropdown(label="Month", choices=[str(i) for i in list(range(1, 13))],
                                         allow_custom_value=True,
                                         value="1", interactive=True)
-                    day = gr.Dropdown(label="Day", choices=[str(i) for i in list(range(1, 32))], allow_custom_value=True,
+                    day = gr.Dropdown(label="Day", choices=[str(i) for i in list(range(1, 32))],
+                                      allow_custom_value=True,
                                       value="1",
                                       interactive=True)
                     # TODO 自动推算星座 day.change(inference, [month, day], constellations)
@@ -291,28 +310,72 @@ with gr.Blocks() as app:
                                           "钟离", "胡桃", "Sheldon", "Raj", "Penny", "韦小宝", "乔峰", "神里绫华",
                                           "雷电将军",
                                           "于谦"], label="soul character", visible=True)
-                chat = gr.Button("开始对话")
-                analyse = gr.Button("开始分析")
-            with gr.Row():
+                with gr.Row():
+                    chat = gr.Button("开始对话")
+                    analyse = gr.Button("开始分析")
+            with gr.Column():
                 chatbot = gr.Chatbot(label="ChatChat")
                 soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
             keep.click(fn=chat_psychologist,
-                       inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3], outputs=q4)
+                       inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
             chat.click(fn=double_chat, inputs=[characters, nickname, year, month, day, sex, occupation,
-                                                       school, label, q4], outputs=[soul_report])
+                                               school, label, q1, q2, q3, q4, chatbot], outputs=[chatbot])
             analyse.click(fn=analyse_from_history, inputs=[nickname, characters, chatbot], outputs=soul_report)
-    with gr.Tab:
+
+
+    def update(your_name):
+        return gr.update(choices=[name for name in os.listdir("characters/custom") if name != your_name])
+
+
+    def real_chat(your_name, custom_roles, real_chatbot):
+        story_text_folder = f"./characters/custom/{your_name}/story_txts"
+        system_prompt = f"./characters/custom/{your_name}/system_prompt.txt"
+        chatbot_1 = ChatHaruhi(system_prompt=system_prompt,
+                               llm="openai",
+                               story_text_folder=story_text_folder,
+                               verbose=True)  # 双人chatbot 聊天
+        story_text_folder = f"./characters/custom/{custom_roles}/story_txts"
+        system_prompt = f"./characters/custom/{custom_roles}/system_prompt.txt"
+        chatbot_2 = ChatHaruhi(system_prompt=system_prompt,
+                               llm="openai",
+                               story_text_folder=story_text_folder,
+                               verbose=True)  # 双人chatbot 聊天
+        chatbot_1.k_search = 5
+        chatbot_2.k_search = 5
+        for i in range(5):
+            if len(real_chatbot) == 0:
+                response_1 = chatbot_1.chat(role=custom_roles,
+                                            text=f'你好！我是{your_name}' + custom_roles + "！ 很高兴认识你！我们能相互介绍下自己吗？")
+                response_2 = chatbot_2.chat(role=your_name, text=response_1)
+            else:
+                response_1 = chatbot_1.chat(role=custom_roles, text=response_2)
+                response_2 = chatbot_2.chat(role=your_name, text=response_1)
+            real_chatbot.append((response_1, response_2))
+            print(response_1)
+            print(response_2)
+
+            yield real_chatbot
+
+
+    def delete_name(your_name):
+        return gr.update(choices=[name for name in os.listdir("characters/custom") if name != your_name])
+    with gr.Tab(label="开始聊天"):
         # 查询当前已有的角色
-        users = []
-        custom_roles = gr.Dropdown(users, allow_custom_value=False, multiselect=False)
+        users = os.listdir("characters/custom")
+        with gr.Row():
+            your_name = gr.Textbox(label="your name")
+            custom_roles = gr.Dropdown(users, allow_custom_value=False, multiselect=False, label="custom roles")
         search = gr.Button("刷新")
-        real_chatbot = gr.Chatbot()
-        real_report = gr.Textbox(lines=40)
-        begin_chat = gr.Button("开始交流")
-        begin_analyse = gr.Button("开始分析")
-        search.click(fn=update, outputs=custom_roles)
-        begin_chat(fn=real_chat, [nickname, custom_roles], [])
-        begin_analyse.click(analyse_from_history, [nickname, custom_roles], real_report)
+        with gr.Row(equal_height=True):
+            real_chatbot = gr.Chatbot()
+            real_report = gr.Textbox()
+        with gr.Row():
+            begin_chat = gr.Button("开始交流")
+            begin_analyse = gr.Button("开始分析")
+        search.click(fn=update, inputs=your_name, outputs=custom_roles)
+        your_name.change(fn=delete_name, inputs=[your_name], outputs=custom_roles)
+        begin_chat.click(fn=real_chat, inputs=[your_name, custom_roles, real_chatbot], outputs=[real_chatbot])
+        begin_analyse.click(analyse_from_history, [your_name, custom_roles, real_chatbot], real_report)
     # end soul test
 
 if __name__ == "__main__":
