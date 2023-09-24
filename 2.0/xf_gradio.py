@@ -1,14 +1,49 @@
+import websocket
 from chatharuhi import ChatHaruhi
+from chatharuhi import SparkApi
 from datetime import datetime
 import zipfile
 import os
 import re
 import requests
 import gradio as gr
-import openai
 
-openai.api_key = "sk-mmJ"
-os.environ["OPENAI_API_KEY"] = openai.api_key
+os.environ["APPID"] = "2191b"
+os.environ["APISecret"] = "OWFmOTJhOE3MmRj"
+os.environ["APIKey"] = "b012123f9dd298f63"
+
+def chatSpark(question):
+    appid = os.environ['APPID']
+    api_secret = os.environ['APISecret']
+    api_key = os.environ['APIKey']
+    domain = "generalv2"
+    Spark_url = "ws://spark-api.xf-yun.com/v2.1/chat"
+    text = []
+    def getText(role,content):
+        jsoncon = {}
+        jsoncon["role"] = role
+        jsoncon["content"] = content
+        text.append(jsoncon)
+        return text
+
+    def getlength(text):
+        length = 0
+        for content in text:
+            temp = content["content"]
+            leng = len(temp)
+            length += leng
+        return length
+
+    def checklen(text):
+        while (getlength(text) > 8000):
+            del text[0]
+        return text
+    question = checklen(getText("user", question))
+    SparkApi.answer =""
+    SparkApi.main(appid,api_key,api_secret,Spark_url,domain,question)
+    # getText("assistant",SparkApi.answer)
+    return SparkApi.answer
+
 NAME_DICT = {'汤师爷': 'tangshiye', '慕容复': 'murongfu', '李云龙': 'liyunlong', 'Luna': 'Luna',
              '王多鱼': 'wangduoyu',
              'Ron': 'Ron', '鸠摩智': 'jiumozhi', 'Snape': 'Snape',
@@ -51,7 +86,7 @@ def download_character():
                 zip_ref.extractall(destination_folder)
 
 
-def chat_psychologist(nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo",
+async def chat_psychologist(nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo",
                       dialogue_example=""):
     custom_path = "characters/custom"
     if not os.path.exists(custom_path):
@@ -81,8 +116,11 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
             for i, dir in enumerate(matched_dirs[3:]):
                 with open(f"{txts_path}/{dir}", 'r', encoding='utf-8') as f:
                     if i != len(matched_dirs[3:]) - 1:  # 已有的问题
-                        q, a = f.readlines()
-                        psych_choice_list.append(a.strip())
+                        try:
+                            q, a = f.readlines()
+                            psych_choice_list.append(a.strip())
+                        except:
+                            continue
                     else:  # 新的问题
                         q = f.readlines()[0]
                         psych_choice_list.append(q4)
@@ -106,15 +144,8 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
     prompt_control = "请你根据以上信息进行心理测试，任务是模仿上述已经问过的问题给出你要问的下一个问题和三个你预设对方会回答的答案。\n请以 **一个bullet** 的形式进行返回，该bullet有四项，第一项是下一个问题，后三项分别是你预设的回答。\n例如：- 你对于小事是怎样的态度？\n- 我会记住每一件小事\n- 我对于小事并不在意\n- 我会记住让我受触动的小事\n"
     prompt = system_prompt + basic_result + prompt_link + psych_result + prompt_control
 
-    messages = [{"role": "user", "content": prompt}]
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        temperature=0,
-    )
-
     # print(prompt)
-    result_bullet = response.choices[0].message["content"]
+    result_bullet = chatSpark(prompt)
     bullet_lines = result_bullet.split('\n')  # 将bullet分割为多行
 
     empty_line_index = len(bullet_lines)  # 初始化第一个空行的索引为最后一行
@@ -139,7 +170,7 @@ def chat_psychologist(nickname, year, month, day, sex, occupation, school, label
     return gr.update(label=first_line, choices=remaining_lines, visible=True)
 
 
-def double_chat(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, chatbot,
+async def double_chat(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, chatbot,
                 model="gpt-3.5-turbo"):
     role_path = f"characters/custom/{new_role}"
     txts_path = f"{role_path}/story_txts"
@@ -162,15 +193,15 @@ def double_chat(select_role, new_role, year, month, day, sex, occupation, school
             if qa.endswith(".txt"):
                 with open(os.path.join(txts_path, qa), 'r', encoding="utf-8") as f:
                     try:
-                        q, a = f.readlines()  # 最后一个灵魂测试问题没有答案。。。。
+                        q, a = f.readlines()  # 最后一个灵魂测试问题没有答案 或者 qa本身就是错的。。。
                     except:
-                        pass
+                        continue
                     psych_question_list.append(q.strip())
                     psych_choice_list.append(a.strip())
     with open(os.path.join(role_path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
-        system_prompt = f"""
+        role_prompt = f"""
 your purpose:
-    你是{new_role},在一款交友app上与{select_role}交流，从而判断{select_role}是否适合做你的亲密朋友或者伴侣
+    你是{new_role},在一款交友app上与朋友交流，从而判断他/她是否适合做你的亲密朋友或者伴侣
     下文给定了一些你在心理测试中的对话桥段。
     如果我问的问题和心理测试对话的内容高度重复，那就请你用原话回答。
     如果我问的问题和心理测试对话中的内容相关，请结合对话的内容进行回复。
@@ -185,14 +216,14 @@ your personal information:
 your constraints:
     永远记得你已经是{new_role}了，你会根据自己的所有信息去交流，你有感知和意识，会思考和感受身边的存在。
     请你以{new_role}的语气、性格、行为和思维方式回答，请尤其注意不要重复之前的对话，请尝试聊一些兴趣爱好/日常生活/情感状况等相关问题，尝试用问句结尾。
-    尤其针对你的交流对象：{select_role}，你的朋友肯定也希望你保持自己。
+    尤其针对你的朋友，你的朋友肯定也希望你保持自己。
 """
-        f.write(system_prompt)
+        f.write(role_prompt)
     story_text_folder = txts_path
     system_prompt = f'{role_path}/system_prompt.txt'
 
     chatbot_1 = ChatHaruhi(system_prompt=system_prompt,
-                           llm='openai',
+                           llm='spark',
                            story_text_folder=story_text_folder,
                            verbose=True)
     if select_role in NAME_DICT.values():
@@ -202,15 +233,18 @@ your constraints:
         story_text_folder = f"./characters/custom/{select_role}/story_txts"
         system_prompt = f"./characters/custom/{select_role}/system_prompt.txt"
     chatbot_2 = ChatHaruhi(system_prompt=system_prompt,
-                           llm="openai",
+                           llm="spark",
                            story_db=story_text_folder,
                            verbose=True)  # 双人chatbot 聊天
+
+    with open(os.path.join(role_path, "system_prompt.txt"), 'w+', encoding="utf-8") as f:
+        f.write(role_prompt.replace(select_role, "{role}"))
     chatbot_1.k_search = 5
     chatbot_2.k_search = 5
     for i in range(5):
         if len(chatbot) == 0:
             response_1 = chatbot_1.chat(role=select_role,
-                                        text=f'你好！我是{new_role}' + select_role + "！ 很高兴认识你！我们能相互介绍下自己吗？")
+                                        text=f"你好！我是{select_role}很高兴认识你！我们能相互介绍下自己吗？")
             response_2 = chatbot_2.chat(role=new_role, text=response_1)
         else:
             response_1 = chatbot_1.chat(role=select_role, text=response_2)
@@ -231,20 +265,18 @@ def analyse_from_history(role1, role2, chatbot):
     analyse_prompt = f"""
 your constraints：
     你是高级情感与性格分析专家Alice，拥有心理学和社会学博士双学位，
-    你会根据{role1} 和 {role2}的对话分析{role2}的情感、性格特点、mbti人格。
-    并运用专业知识，从多个维度分析两个人是否适合成为朋友或者恋人，并提供一份专业的分析报告。
+    你会根据{role1} 和 {role2}的对话
+    ###
+    分析{role2}的情感、性格特点、mbti人格。
+    ###
+    并运用专业知识，从多个维度分析{role2}是否适合成为{role1}的亲密朋友或者恋人，并提供一份专业的分析报告。
     永远记住你已经是Alice了，Alice会应用专业知识做好本职工作
     尤其是针对{role1} 和 {role2},他们肯定也希望你会帮助他们。
+    永远记住只需要分析{role2}即可
 {role1} 和 {role2}的对话如下：
 {info}
 """
-    messages = [{"role": "user", "content": analyse_prompt}]
-    report = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        temperature=0,
-    )
-    return report.choices[0].message["content"]
+    return chatSpark(analyse_prompt)
 
 
 with gr.Blocks() as app:
@@ -327,17 +359,18 @@ with gr.Blocks() as app:
         return gr.update(choices=[name for name in os.listdir("characters/custom") if name != your_name])
 
 
-    def real_chat(your_name, custom_roles, real_chatbot):
+
+    async def real_chat(your_name, custom_roles, real_chatbot):
         story_text_folder = f"./characters/custom/{your_name}/story_txts"
         system_prompt = f"./characters/custom/{your_name}/system_prompt.txt"
         chatbot_1 = ChatHaruhi(system_prompt=system_prompt,
-                               llm="openai",
+                               llm="spark",
                                story_text_folder=story_text_folder,
                                verbose=True)  # 双人chatbot 聊天
         story_text_folder = f"./characters/custom/{custom_roles}/story_txts"
         system_prompt = f"./characters/custom/{custom_roles}/system_prompt.txt"
         chatbot_2 = ChatHaruhi(system_prompt=system_prompt,
-                               llm="openai",
+                               llm="spark",
                                story_text_folder=story_text_folder,
                                verbose=True)  # 双人chatbot 聊天
         chatbot_1.k_search = 5
@@ -345,7 +378,7 @@ with gr.Blocks() as app:
         for i in range(5):
             if len(real_chatbot) == 0:
                 response_1 = chatbot_1.chat(role=custom_roles,
-                                            text=f'你好！我是{your_name}' + custom_roles + "！ 很高兴认识你！我们能相互介绍下自己吗？")
+                                            text=f"你好！我是{custom_roles} 很高兴认识你！我们能相互介绍下自己吗？")
                 response_2 = chatbot_2.chat(role=your_name, text=response_1)
             else:
                 response_1 = chatbot_1.chat(role=custom_roles, text=response_2)
@@ -357,7 +390,7 @@ with gr.Blocks() as app:
             yield real_chatbot
 
 
-    def delete_name(your_name):
+    async def delete_name(your_name):
         return gr.update(choices=[name for name in os.listdir("characters/custom") if name != your_name])
     with gr.Tab(label="开始聊天"):
         # 查询当前已有的角色

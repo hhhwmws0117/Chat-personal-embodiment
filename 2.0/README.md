@@ -19,15 +19,16 @@
 - [x] 接入analysis_from_history
 - [x] system_prompt 中不需要qa，会和shot data 重复
 - [x] 第一个tab用于创建和测试角色，且chatbot和 soul report 要分开
-- [ ] 第二个tab用于chat
+- [x] 第二个tab用于chat
 - [x] 如果多次灵魂测试把之前的灵魂测试放进继续灵魂测试的prompt，
       问题命名规范，q1.txt, q2.txt, q3.txt, 
-- [ ] 实时更新新创建的角色 ，查询角色按钮
+- [x] 实时更新新创建的角色 ，查询角色按钮
 - [ ] 聊天记录的保存
 - [ ] 自动计算星座
 - [ ] 写一个constants.py 保存常量
 - [ ] 接入讯飞
 - [ ] 参数校验，error_msg 
+- [ ] gr.Markdown('比赛介绍')
   
 - 渐进式数字个人化身的塑造
   - 从用户和chatbot聊天的对话中抽取
