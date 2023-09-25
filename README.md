@@ -10,7 +10,7 @@
 
 本项目由[米唯实@清华大学](https://github.com/hhhwmws0117)，[詹林康@凯斯西储大学](https://github.com/JunityZhan)，[闫晨曦@成都信息工程大学](https://github.com/todochenxi)，[沈骏一@浙江大学](https://github.com/J1shen)，[孙浩甄@天津大学](https://github.com/JcandZero)开发。
 
-项目运行参考 [运行参考文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/Chat_personal_embodiment_demo.ipynb) 
+项目运行参考 [运行参考文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/2.0/gradio_final.ipynb) 
 
 注意：
 
