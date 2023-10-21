@@ -1,5 +1,7 @@
 ffmpeg_python
 gradio
+chatharuhi
+chromadb
 langchain~=0.0.247
 matplotlib~=3.7.2
 numpy~=1.25.1
