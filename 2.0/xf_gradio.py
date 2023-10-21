@@ -7,10 +7,11 @@ import os
 import re
 import requests
 import gradio as gr
+import time
 
-os.environ["APPID"] = "2191b"
-os.environ["APISecret"] = "OWFmOTJhOE3MmRj"
-os.environ["APIKey"] = "b012123f9dd298f63"
+os.environ["APPID"] = "21b"
+os.environ["APISecret"] = "OWFmj"
+os.environ["APIKey"] = "b0141b0f63"
 
 def chatSpark(question):
     appid = os.environ['APPID']
@@ -58,16 +59,10 @@ NAME_DICT = {'汤师爷': 'tangshiye', '慕容复': 'murongfu', '李云龙': 'li
 # download all character zip file
 def download_character():
     default_path = "characters/default"
-    try:
-        os.makedirs(f"{default_path}/characters_zip")
-    except:
-        pass
+    os.makedirs(f"{default_path}/characters_zip", exist_ok=True)
     for ai_role_en in NAME_DICT.values():
         file_url = f"https://github.com/LC1332/Haruhi-2-Dev/raw/main/data/character_in_zip/{ai_role_en}.zip"
-        try:
-            os.makedirs(f"{default_path}/{ai_role_en}")
-        except:
-            pass
+        os.makedirs(f"{default_path}/{ai_role_en}", exist_ok=True)
         if f"{ai_role_en}.zip" not in os.listdir(f"{default_path}/characters_zip"):
             destination_file = f"{default_path}/characters_zip/{ai_role_en}.zip"
             max_retries = 3  # 最大重试次数
@@ -86,11 +81,10 @@ def download_character():
                 zip_ref.extractall(destination_folder)
 
 
-async def chat_psychologist(nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo",
+async def chat_psychologist(dialogues, nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, model="gpt-3.5-turbo",
                       dialogue_example=""):
     custom_path = "characters/custom"
-    if not os.path.exists(custom_path):
-        os.makedirs(custom_path)
+    os.makedirs(custom_path, exist_ok=True)
     basic_question_list = ["昵称", "生日", "性别", "职业", "学校", "标签"]
     basic_choice_list = [nickname, f"{year}年{month}月{day}", sex, occupation, school, label]
     psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
@@ -98,8 +92,15 @@ async def chat_psychologist(nickname, year, month, day, sex, occupation, school,
     path = f"{custom_path}/{nickname}"
     txts_path = f"{path}/story_txts"
     if not os.path.exists(path):
-        os.makedirs(path)  # 创建个人角色目录
-        os.makedirs(txts_path)  # 创建个人角色对话目录
+        os.makedirs(path, exist_ok=True)  # 创建个人角色目录
+        os.makedirs(txts_path, exist_ok=True)  # 创建个人角色对话目录
+        with open(dialogues.name, 'r', encoding='utf-8') as f:
+            data = f.read().split("\n\n")
+            timestamp = time.time()
+            formatted_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
+            for i, dialogue in enumerate(data):
+                with open(f"{txts_path}/{formatted_time}_{i}.txt", 'w', encoding='utf-8') as fw:
+                    fw.write(dialogue)
         for i in range(len(psych_question_list)):
             question_string = f"{psych_question_list[i]}\n{psych_choice_list[i]}"
             # Save the string to a file with index as the name
@@ -170,7 +171,7 @@ async def chat_psychologist(nickname, year, month, day, sex, occupation, school,
     return gr.update(label=first_line, choices=remaining_lines, visible=True)
 
 
-async def double_chat(select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, chatbot,
+async def double_chat(dialogues, select_role, new_role, year, month, day, sex, occupation, school, label, q1, q2, q3, q4, chatbot,
                 model="gpt-3.5-turbo"):
     role_path = f"characters/custom/{new_role}"
     txts_path = f"{role_path}/story_txts"
@@ -178,6 +179,13 @@ async def double_chat(select_role, new_role, year, month, day, sex, occupation, 
     if not os.path.exists(role_path):  # TODO 这部分可以抽取成一个函数，先这样吧
         os.makedirs(role_path)  # 创建个人角色目录
         os.makedirs(txts_path)  # 创建个人角色对话目录
+        with open(dialogues.name, 'r', encoding='utf-8') as f:
+            data = f.read().split("\n\n")
+            timestamp = time.time()
+            formatted_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
+            for i, dialogue in enumerate(data):
+                with open(f"{txts_path}/{formatted_time}_{i}.txt", 'w', encoding='utf-8') as fw:
+                    fw.write(dialogue)
         psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
         psych_choice_list = [q1, q2, q3]
         for i in range(len(psych_question_list)):
@@ -313,7 +321,8 @@ with gr.Blocks() as app:
                     school = gr.Textbox(label="我的学校", placeholder="清华大学")
                     label = gr.Dropdown(
                         choices=["音乐", "二次元", "健身", "美食", "朋友圈摄影师", "声控", "篮球", "Steam", "电竞"],
-                        multiselect=True, label="最后一步啦，选择我的标签")
+                        multiselect=True, label="选择我的标签")
+                dialogues = gr.File(label="上传对话知识库")
                 # begin soul test
                 with gr.Row():
                     q1 = gr.Dropdown(
@@ -349,8 +358,8 @@ with gr.Blocks() as app:
                 chatbot = gr.Chatbot(label="ChatChat")
                 soul_report = gr.Textbox(label="soul report", placeholder="report", lines=30)
             keep.click(fn=chat_psychologist,
-                       inputs=[nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
-            chat.click(fn=double_chat, inputs=[characters, nickname, year, month, day, sex, occupation,
+                       inputs=[dialogues, nickname, year, month, day, sex, occupation, school, label, q1, q2, q3, q4], outputs=q4)
+            chat.click(fn=double_chat, inputs=[dialogues, characters, nickname, year, month, day, sex, occupation,
                                                school, label, q1, q2, q3, q4, chatbot], outputs=[chatbot])
             analyse.click(fn=analyse_from_history, inputs=[nickname, characters, chatbot], outputs=soul_report)
 
