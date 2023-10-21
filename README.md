@@ -10,8 +10,9 @@
 
 本项目由[米唯实@清华大学](https://github.com/hhhwmws0117)，[詹林康@凯斯西储大学](https://github.com/JunityZhan)，[闫晨曦@成都信息工程大学](https://github.com/todochenxi)，[沈骏一@浙江大学](https://github.com/J1shen)，[孙浩甄@天津大学](https://github.com/JcandZero)开发。
 
-项目运行参考 [运行参考文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/2.0/gradio_final.ipynb) 
+项目运行参考`2.0/gradio_final.ipynb` or  [运行参考文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/2.0/gradio_final.ipynb)
 
 注意：
-
-请于[星火认知大模型agent配置文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/src_reform/baichuanAgent.py) 中修改您使用的APPID,APISecret和APIKey，请保证您使用中国境内IP调用大模型。
+- 请于[星火认知大模型agent配置文件](https://github.com/hhhwmws0117/Chat-personal-embodiment/blob/main/src_reform/baichuanAgent.py) 中修改您使用的APPID,APISecret和APIKey，请保证您使用中国境内IP调用大模型。
+- 执行该项目需要Hugging Face支持，请多次尝试
+- 如果需要重新创建角色，请删除`characters/custom/`下的相应角色目录

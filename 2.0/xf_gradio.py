@@ -9,16 +9,16 @@ import requests
 import gradio as gr
 import time
 
-os.environ["APPID"] = "21b"
-os.environ["APISecret"] = "OWFmj"
-os.environ["APIKey"] = "b0141b0f63"
+os.environ["APPID"] = "211b"
+os.environ["APISecret"] = "OWFmOTJhORj"
+os.environ["APIKey"] = "b0128f63"
 
 def chatSpark(question):
     appid = os.environ['APPID']
     api_secret = os.environ['APISecret']
     api_key = os.environ['APIKey']
     domain = "generalv2"
-    Spark_url = "ws://spark-api.xf-yun.com/v2.1/chat"
+    Spark_url = "ws://spark-api.xf-yun.com/v2.2020.txt/chat"
     text = []
     def getText(role,content):
         jsoncon = {}
@@ -94,13 +94,14 @@ async def chat_psychologist(dialogues, nickname, year, month, day, sex, occupati
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)  # 创建个人角色目录
         os.makedirs(txts_path, exist_ok=True)  # 创建个人角色对话目录
-        with open(dialogues.name, 'r', encoding='utf-8') as f:
-            data = f.read().split("\n\n")
-            timestamp = time.time()
-            formatted_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
-            for i, dialogue in enumerate(data):
-                with open(f"{txts_path}/{formatted_time}_{i}.txt", 'w', encoding='utf-8') as fw:
-                    fw.write(dialogue)
+        if dialogues is not None:
+            with open(dialogues.name, 'r', encoding='utf-8') as f:
+                data = f.read().split("\n\n")
+                timestamp = time.time()
+                formatted_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
+                for i, dialogue in enumerate(data):
+                    with open(f"{txts_path}/{formatted_time}_{i}.txt", 'w', encoding='utf-8') as fw:
+                        fw.write(dialogue)
         for i in range(len(psych_question_list)):
             question_string = f"{psych_question_list[i]}\n{psych_choice_list[i]}"
             # Save the string to a file with index as the name
@@ -123,8 +124,11 @@ async def chat_psychologist(dialogues, nickname, year, month, day, sex, occupati
                         except:
                             continue
                     else:  # 新的问题
-                        q = f.readlines()[0]
-                        psych_choice_list.append(q4)
+                        try:
+                            q = f.readlines()[0]
+                            psych_choice_list.append(q4)
+                        except:
+                            continue
                     psych_question_list.append(q.strip())
             with open(f"{txts_path}/{matched_dirs[-1]}", 'a', encoding='utf-8') as f:
                 f.write("\n" + q4)  # 写入回答
@@ -179,13 +183,14 @@ async def double_chat(dialogues, select_role, new_role, year, month, day, sex, o
     if not os.path.exists(role_path):  # TODO 这部分可以抽取成一个函数，先这样吧
         os.makedirs(role_path)  # 创建个人角色目录
         os.makedirs(txts_path)  # 创建个人角色对话目录
-        with open(dialogues.name, 'r', encoding='utf-8') as f:
-            data = f.read().split("\n\n")
-            timestamp = time.time()
-            formatted_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
-            for i, dialogue in enumerate(data):
-                with open(f"{txts_path}/{formatted_time}_{i}.txt", 'w', encoding='utf-8') as fw:
-                    fw.write(dialogue)
+        if dialogues is not None:
+            with open(dialogues.name, 'r', encoding='utf-8') as f:
+                data = f.read().split("\n\n")
+                timestamp = time.time()
+                formatted_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
+                for i, dialogue in enumerate(data):
+                    with open(f"{txts_path}/{formatted_time}_{i}.txt", 'w', encoding='utf-8') as fw:
+                        fw.write(dialogue)
         psych_question_list = ["你平时的周末是怎么度过的？", "你对音乐的偏好是什么？", "你最喜欢的电影类型是什么？"]
         psych_choice_list = [q1, q2, q3]
         for i in range(len(psych_question_list)):
@@ -296,20 +301,20 @@ with gr.Blocks() as app:
     with gr.Tab(label="创建角色"):
         with gr.Row(equal_height=True):
             with gr.Column():
-                nickname = gr.Textbox(label="对了，你的昵称是？", placeholder="Haruhi")
+                nickname = gr.Textbox(label="对了，你的昵称是？")
                 with gr.Row():
                     year = gr.Dropdown(label="Year", choices=[str(i) for i in list(range(1988, 2008))],
                                        allow_custom_value=True,
                                        value="2000", interactive=True)
                     month = gr.Dropdown(label="Month", choices=[str(i) for i in list(range(1, 13))],
                                         allow_custom_value=True,
-                                        value="1", interactive=True)
+                                        value="2020.txt", interactive=True)
                     day = gr.Dropdown(label="Day", choices=[str(i) for i in list(range(1, 32))],
                                       allow_custom_value=True,
-                                      value="1",
+                                      value="2020.txt",
                                       interactive=True)
                     # TODO 自动推算星座 day.change(inference, [month, day], constellations)
-                    constellation = gr.Textbox(label="星座", placeholder="摩羯座")
+                    constellation = gr.Textbox(label="星座")
                 with gr.Row():
                     sex = gr.Dropdown(choices=["男生", "女生", "保密"], label="Hi，你的性别是？", value="男生",
                                       interactive=True)
@@ -318,7 +323,7 @@ with gr.Blocks() as app:
                                  "金融",
                                  "财会/审计", "自由职业"], label="我的行业/职业", value="学生", interactive=True)
                 with gr.Row():
-                    school = gr.Textbox(label="我的学校", placeholder="清华大学")
+                    school = gr.Textbox(label="我的学校")
                     label = gr.Dropdown(
                         choices=["音乐", "二次元", "健身", "美食", "朋友圈摄影师", "声控", "篮球", "Steam", "电竞"],
                         multiselect=True, label="选择我的标签")
@@ -409,8 +414,8 @@ with gr.Blocks() as app:
             custom_roles = gr.Dropdown(users, allow_custom_value=False, multiselect=False, label="custom roles")
         search = gr.Button("刷新")
         with gr.Row(equal_height=True):
-            real_chatbot = gr.Chatbot()
-            real_report = gr.Textbox()
+            real_chatbot = gr.Chatbot(label="ChatChat")
+            real_report = gr.Textbox(label="soul report")
         with gr.Row():
             begin_chat = gr.Button("开始交流")
             begin_analyse = gr.Button("开始分析")
