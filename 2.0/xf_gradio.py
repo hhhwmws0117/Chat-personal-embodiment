@@ -1,3 +1,5 @@
+import copy
+
 import websocket
 from chatharuhi import ChatHaruhi
 from chatharuhi import SparkApi
@@ -254,6 +256,8 @@ your constraints:
         f.write(role_prompt.replace(select_role, "{role}"))
     chatbot_1.k_search = 5
     chatbot_2.k_search = 5
+    chatbot_1.dialogue_history = copy.deepcopy(chatbot)
+    chatbot_2.dialogue_history = copy.deepcopy(chatbot)
     for i in range(5):
         if len(chatbot) == 0:
             response_1 = chatbot_1.chat(role=select_role,
